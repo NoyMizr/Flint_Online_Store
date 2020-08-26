@@ -1,7 +1,9 @@
 .App {
   text-align: center;
 }
-
+.header{
+  text-align: left;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -18,7 +20,6 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
