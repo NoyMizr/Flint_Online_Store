@@ -1,14 +1,16 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {useState} from 'react';
 import './App.css';
-import 'antd/dist/antd.css'
-import { Layout, Menu, Breadcrumb, Button, PageHeader} from 'antd';
-import Title from 'antd/lib/typography/Title'
+import 'antd/dist/antd.css';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { Layout, Menu, Breadcrumb, Button, PageHeader, Input, AutoComplete } from 'antd';
+import Title from 'antd/lib/typography/Title';
 
 
-import { UserOutlined, LaptopOutlined, NotificationOutlined, AlignLeftOutlined ,LoginOutlined,UserAddOutlined,ShoppingCartOutlined, DingtalkOutlined } from '@ant-design/icons';
-
-const { Header, Content, Sider, Footer, Input ,AudioOutlined } = Layout;
+import { MenuUnfoldOutlined, UserOutlined, LaptopOutlined, NotificationOutlined, AlignLeftOutlined ,LoginOutlined,UserAddOutlined,ShoppingCartOutlined, DingtalkOutlined } from '@ant-design/icons';
+import Login from "./components/Login";
+import Registration from "./components/Registration";
+const { Search } = Input;
+const { Header, Content, Sider, Footer ,AudioOutlined } = Layout;
 
 
 const { SubMenu } = Menu;
@@ -18,7 +20,6 @@ const toggleCollapsed = () => {
     collapsed: !this.state.collapsed,
   });
 };
-// const { Search } = Input;
 
 const suffix = (
     <AudioOutlined
@@ -29,55 +30,57 @@ const suffix = (
     />
 );
 function App(){
+    const [collapsed, setCollapse] = useState(false)
   return (
+      <Router>
       <div className="App">
-        <Layout>
-          <Header className="header"  style={{padding:10}} >
-
-            <Title style={{color:'white'}} level={2}>Flint</Title>
-          </Header>
-            <div className="logo" />
-            <Menu className="logok" theme="dark" mode="horizontal" defaultSelectedKeys={['2']}>
-              <Menu.Item c key="2" icon={<LoginOutlined /> }>Login</Menu.Item>
-              <Menu.Item key="1" icon={<UserAddOutlined />} >registration</Menu.Item>
-            </Menu>
-          <Layout >
-            <Sider width={200} className="site-layout-background">
-              <Menu
-                  mode="inline"
-                  defaultSelectedKeys={['1']}
-                  defaultOpenKeys={['sub1']}
-                  style={{ height: '100%', borderRight: 0 }}
-              >
-                <SubMenu key="sub1" icon={<AlignLeftOutlined />} title="Catgories">
-                  <Menu.Item key="1">Eating and drinking equipment</Menu.Item>
-                  <Menu.Item key="2">Clothing</Menu.Item>
-                  <Menu.Item key="3">Sleeping and Shading</Menu.Item>
-                  <Menu.Item key="4">Storage</Menu.Item>
-                <Menu.Item key="4">General</Menu.Item>
-                </SubMenu>
-              </Menu>
-            </Sider>
-            <Layout style={{ padding: '0 24px 24px' }}>
-              <Breadcrumb style={{ margin: '16px 0' }}>
-                <Breadcrumb.Item>Home</Breadcrumb.Item>
-                <Breadcrumb.Item>List</Breadcrumb.Item>
-                <Breadcrumb.Item>App</Breadcrumb.Item>
-              </Breadcrumb>
-              <Content
-                  className="site-layout-background"
-                  style={{
-                    padding: 24,
-                    margin: 0,
-                    minHeight: 280,
-                  }}
-              >
-                Content
-              </Content>
-            </Layout>
+          <Layout>
+              <Header style={{ position: 'fixed', zIndex: 1, width: '100%', display: "flex",
+                  alignItems: "center", justifyContent: "space-between"}}>
+                  <div style={{display: 'flex'}}>
+                      <MenuUnfoldOutlined style={{color: 'white'}} onClick={() => setCollapse(!collapsed)}/>
+                      <Title style={{color: 'white'}} level={1}>Flint</Title>
+                  </div>
+                  <div className="search1">
+                  <Search
+                      placeholder="search"
+                      onSearch={value => console.log(value)}
+                      style= {{ width: 300 }}
+                  />
+                  </div>
+                  <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['2']}>
+                      {/*{props.user ? <Menu.Item key="1" >nav 1</Menu.Item> : <Menu/>}*/}
+                      <Menu.Item onClick={Login} icon={<LoginOutlined />}key="1">Login</Menu.Item>
+                      <Menu.Item icon={<UserAddOutlined />} key="2">Registration</Menu.Item>
+                  </Menu>
+              </Header>
+              <Layout>
+                  <Sider trigger={null} collapsible collapsed={collapsed} collapsedWidth="0" >
+                      <div className="logo" />
+                      <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
+                          <Menu.Item key="1" icon={<UserOutlined />}>
+                              nav 1
+                          </Menu.Item>
+                          {/*<Menu.Item key="2" icon={<VideoCameraOutlined />}>*/}
+                          {/*    nav 2*/}
+                          {/*</Menu.Item>*/}
+                          {/*<Menu.Item key="3" icon={<UploadOutlined />}>*/}
+                          {/*    nav 3*/}
+                          {/*</Menu.Item>*/}
+                      </Menu>
+                  </Sider>
+                  <Content style={{minHeight: "80vh"}}>Content</Content>
+              </Layout>
+              <Footer>Footer</Footer>
           </Layout>
-        </Layout>
       </div>
+          <main className="main">
+            <div className="content">
+                <Route path="/registration" component ={Registration} />
+                <Route path="/login" component ={Login} />
+              </div>
+          </main>
+      </Router>
   );
 }
 

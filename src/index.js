@@ -1,12 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter as Router } from 'react-router-dom'
 import './index.css';
 import App from './App';
+import Login from './components/Login';
+import Category from './components/Category';
+import Registration from "./components/Registration";
+
 import * as serviceWorker from './serviceWorker';
+import Product from "./components/Product";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Login/>
   </React.StrictMode>,
   document.getElementById('root')
 );
