@@ -44,8 +44,8 @@ const Login = (props) => {
                 <Title style={{color: 'BLACK'}} level={1}></Title>
                 <Title style={{color: 'BLACK'}} level={5}>New to Flint?</Title>
                 <div className="site-button-ghost-wrapper">
-                <Button  type="primary" ghost>
-                    Creat your Flint account
+                <Button  type="primary" ghost onClick={() => window.location.href='/register'}>
+                    Create your Flint account
                 </Button>
                 </div>
             </Form.Item>
