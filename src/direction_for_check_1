@@ -1,0 +1,32 @@
+results
+will add first and third to db. will send error to console (change that will be made later)
+might add double (bug)
+rest are intentional errors that work on my Windows
+
+register check
+--> data-> works                                +
+--> data1-> Taken
+--> data2-> email not the same                  +
+--> data3-> works                               +
+--> data4-> password not the same               +
+--> data5-> password not small                  +
+--> data6-> password not capital                +
+--> data7-> password not numbers                +
+
+
+login check
+--> data-> WORK(numlogins=1)
+--> data1-> Wrong Pass
+--> data11-> Email not in DB
+--> data-> WORK(numlogins=2)
+
+
+how to check
+1. start redis
+2. use flushall command in redis
+3. run server_clean.js
+4. open in Browser and add to console
+5. enter 1 by 1 and check results mentioned above ..
+6. after each to see the results you use
+
+debugs for items related things are were not created due to my problem with how to do that right now.
