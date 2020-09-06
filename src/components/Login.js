@@ -16,6 +16,9 @@ const Login = (props) => {
     const onRequiredTypeChange = ({ requiredMark }) => {
         setRequiredMarkType(requiredMark);
     };
+    const onLogin = values => {
+        fetch('http://localhost:3001/login', {data: values}).then((res => props.setUser(res.data)))
+    }
 
     return (
         <div className="log">

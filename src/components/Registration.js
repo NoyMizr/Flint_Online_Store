@@ -6,10 +6,11 @@ import Title from "antd/lib/typography/Title";
 
 
 const Registration = (props) => {
-    const [form] = Form.useForm();
+    const [form] = Form.useForm()
 
 
     const onFieldsChanged = values => {
+
         console.log("values:")
         console.log(values)
     }
@@ -18,7 +19,7 @@ const Registration = (props) => {
     return (
         <Router>
         <div className="log">
-            <header> <Title style={{color: 'BLACK'}} level={2}>Creat your Flint account</Title>
+            <header> <Title style={{color: 'BLACK'}} level={2}>Create your Flint account</Title>
                 <Form
                     form={form}
                     layout="vertical"
@@ -30,8 +31,12 @@ const Registration = (props) => {
                         {
                             required: true,
                             message: 'Please input your name!',
-                        },
-                    ]}>
+                        },{
+                            message:'Not Vaild Name',
+                            pattern: /^[a-zA-Z]+[/s]*[a-zA-Z]+$/
+                        }
+                    ]}
+                    >
                         <Input type="text" name="name" id="name" style={{}} placeholder="" />
                     </Form.Item>
 
@@ -39,12 +44,16 @@ const Registration = (props) => {
                         {
                             required: true,
                             message: 'Please input your email!',
-                        },
+                        },{
+                            message:'Not vaild Email'
+                            ,
+                            pattern:/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                        }
                     ]}>
                         <Input type="email" id="email" style={{}} placeholder="" />
                     </Form.Item>
 
-                    <Form.Item label="Re-Email" required name="reemail"  rules={[
+                    <Form.Item label="Re-Email" required name="remail"  rules={[
                         {
                             required: true,
                             message: 'Please confirm your email!',
@@ -66,7 +75,21 @@ const Registration = (props) => {
                         {
                             required: true,
                             message: 'Please input your password!',
-                        },
+                        }, {
+                            min:6,
+                            message: 'Password cannot be less than 6 characters',
+                        }, {
+                            max:12,
+                            message: 'Password cannot be greater than 12 characters',
+                        },{
+                            message:'Password must include at least:'+
+                                '1 Small Letter' +
+                                '1 Capitel Letter'+
+                                '1 Number'
+                                ,
+                            pattern: /((^([0-9])+([A-Z])+([a-z])+$))|((^([0-9])+([a-z])+([A-Z])+)$)|((^([A-Z])+([0-9])+([a-z])+)$)|((^([A-z])+([a-z])+([0-9])+)$)|((^([a-z])+([0-9])+([a-z])+)$)|((^([a-z])+([A-Z])+([0-9])+)$)/
+                        }
+
                     ]}>
                         <Input type="password" id="password" placeholder="" />
                     </Form.Item>
@@ -78,7 +101,7 @@ const Registration = (props) => {
                         },
                         ({ getFieldValue }) => ({
                             validator(rule, value) {
-                                if (!value || getFieldValue('password') === value) {
+                                if ((!value || getFieldValue('password')) === value ) {
                                     return Promise.resolve();
                                 }
 
@@ -87,6 +110,7 @@ const Registration = (props) => {
                         }),
                     ]}>
                             <Input type="password" id="rpassword" placeholder="" />
+
                     </Form.Item>
 
                     <Form.Item>

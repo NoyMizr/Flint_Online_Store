@@ -9,10 +9,12 @@ import Registration from "./components/Registration";
 
 import * as serviceWorker from './serviceWorker';
 import Product from "./components/Product";
+import ShoppingCart from "./components/ShoppingCart";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App/>
+    <App />
+      {/*{products.map((id, product) => <Product name={product.name} rate={product.rate}/>)}*/}
   </React.StrictMode>,
   document.getElementById('root')
 );
@@ -21,3 +23,4 @@ ReactDOM.render(
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+

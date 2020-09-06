@@ -8,7 +8,7 @@ function Product({id, name, price, image, rate, category, description}) {
 
     return (
         <Space direction="vertical">
-            <Card type ="text"  id="name" title="product.name" style={{ width: 300 }}>
+            <Card type ="text"  id="name" title={name} style={{ width: 300 }}>
 
                 <p>Price:</p>
                 <p>Rate: <Rate disabled defaultValue={2} /></p>
