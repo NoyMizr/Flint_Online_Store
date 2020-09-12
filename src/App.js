@@ -51,6 +51,9 @@ function App() {
             .then(response => response.json())
             .catch(error => notification.error({message: 'Error: ' + error}));
     };
+
+    console.log(user);
+
     return (
         <Router>
             <div className="App">
@@ -74,7 +77,8 @@ function App() {
                             <b className="ant-dropdown-link4" onClick={e => e.preventDefault()}>
                                 <DownOutlined/>
                             </b>
-                        </Dropdown>:!user.permission_level === 1 ? <Dropdown overlay={menu}>
+                        </Dropdown>
+                            :  user.permission_level !== 1 ? <Dropdown overlay={menu}>
                             <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>
                                 <DownOutlined/>
                             </a>
@@ -96,16 +100,18 @@ function App() {
                             </Menu.Item>
                                 <Menu.Item icon={<UserAddOutlined/>} key="3">
                                     <Link to="/register">Registerion</Link>
-                                </Menu.Item></Menu> : !user.permission_level === 1 ?
+                                </Menu.Item></Menu> :
+                                user.permission_level !== 1 ?
                                 <Menu theme="dark" mode="horizontal">
-                                    <Menu.Item icon={<UserOutlined/>} key="0">Hello {user.name},
+                                    <Menu.Item icon={<UserOutlined/>} key="0">Hello {user.name}
                                     </Menu.Item>
                                     <Menu.Item icon={<LogoutOutlined/>} key="1" onClick={logout}>
                                         Logout
                                     </Menu.Item>
                                     <Menu.Item icon={<ShoppingCartOutlined/>} key="2">
                                         <Link to="/ShoppingCart">cart</Link>
-                                    </Menu.Item></Menu> :
+                                    </Menu.Item>
+                                </Menu> :
                                 <Menu theme="dark" mode="horizontal">
                                     <Menu.Item  key="0">Hello Admin {user.name}
                                     </Menu.Item>
