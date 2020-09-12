@@ -1,10 +1,18 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'antd/dist/antd.css';
-import {BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import {BrowserRouter as Router, Switch, Route, Link} from 'react-router-dom';
 import {Layout, Menu, Input, notification, Dropdown} from 'antd';
 import Title from 'antd/lib/typography/Title';
-import {UserOutlined, LoginOutlined, UserAddOutlined, ShoppingCartOutlined, LogoutOutlined,ReadOutlined, DownOutlined} from '@ant-design/icons';
+import {
+    UserOutlined,
+    LoginOutlined,
+    UserAddOutlined,
+    ShoppingCartOutlined,
+    LogoutOutlined,
+    ReadOutlined,
+    DownOutlined
+} from '@ant-design/icons';
 import Login from "./components/Login";
 import Registration from "./components/Registration";
 import ShoppingCart from "./components/ShoppingCart";
@@ -13,32 +21,37 @@ import CheckOut from "./components/CheckOut";
 import RatingPage from "./components/RatingPage";
 import Admin from "./components/Admin";
 import axios from 'axios';
+import Product from "./components/Product";
 
 const {Search} = Input;
 const {Header, Content, Sider} = Layout;
-const menu = (
-    <Menu>
-        <Menu.Item>
-            <a target="_blank" rel="noopener noreferrer" href="">
-                Product
-            </a>
-        </Menu.Item>
-        <Menu.Item>
-            <a target="_blank" rel="noopener noreferrer" href="">
-                Users
-            </a>
-        </Menu.Item>
-    </Menu>
-);
 
 function App() {
     const [user, setUser] = useState(null);
+    const [products, setSearchedProducts] = useState([]);
 
     useEffect(() => {
         axios.get('http://localhost:3001/connected-user', {withCredentials: true})
-            .then(res => {if(res) setUser(res.data)})
+            .then(res => {
+                if (res) setUser(res.data)
+            })
             .catch(err => console.log(err))
     }, [])
+
+    const searchProducts = searchString => {
+        fetch('http://localhost:3001/search/product', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                query: searchString
+            })
+        })
+            .then(res => res.json())
+            .then(data => setSearchedProducts(data))
+    }
 
     const logout = () => {
         setUser(null);
@@ -67,62 +80,44 @@ function App() {
                         <div className="search1">
                             <Search
                                 placeholder="search"
-                                onSearch={value => console.log(value)}
+                                onSearch={searchProducts}
                                 style={{width: 300}}
                             />
                         </div>
 
-                        {!user ? <Dropdown overlay={menu}>
-                            <b className="ant-dropdown-link4" onClick={e => e.preventDefault()}>
-                                <DownOutlined/>
-                            </b>
-                        </Dropdown>
-                            :  user.permission_level !== 1 ? <Dropdown overlay={menu}>
-                            <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>
-                                <DownOutlined/>
-                            </a>
-                        </Dropdown> : <Dropdown overlay={menu} >
-                            <div style={{ marginLeft: '185px', color:'white'}}>
-                                <b className="ant-dropdown-linkt" onClick={e => e.preventDefault()} >
-                                    Select <DownOutlined/>
-                                </b>
-                            </div>
-                        </Dropdown>
-                        }
-
                         <div>
-                            {!user ? <Menu theme="dark" mode="horizontal"><Menu.Item icon={<ReadOutlined />} key="1">
-                                <Link to="/login">ReadMe</Link>
-                            </Menu.Item>
-                                <Menu.Item icon={<LoginOutlined/>} key="2">
-                                <Link to="/login">Login</Link>
-                            </Menu.Item>
-                                <Menu.Item icon={<UserAddOutlined/>} key="3">
-                                    <Link to="/register">Registerion</Link>
-                                </Menu.Item></Menu> :
+                            {!user ? <Menu theme="dark" mode="horizontal"><Menu.Item icon={<ReadOutlined/>} key="1">
+                                    <Link to="/login">ReadMe</Link>
+                                </Menu.Item>
+                                    <Menu.Item icon={<LoginOutlined/>} key="2">
+                                        <Link to="/login">Login</Link>
+                                    </Menu.Item>
+                                    <Menu.Item icon={<UserAddOutlined/>} key="3">
+                                        <Link to="/register">Registerion</Link>
+                                    </Menu.Item></Menu> :
                                 user.permission_level !== 1 ?
-                                <Menu theme="dark" mode="horizontal">
-                                    <Menu.Item icon={<UserOutlined/>} key="0">Hello {user.name}
-                                    </Menu.Item>
-                                    <Menu.Item icon={<LogoutOutlined/>} key="1" onClick={logout}>
-                                        Logout
-                                    </Menu.Item>
-                                    <Menu.Item icon={<ShoppingCartOutlined/>} key="2">
-                                        <Link to="/ShoppingCart">cart</Link>
-                                    </Menu.Item>
-                                </Menu> :
-                                <Menu theme="dark" mode="horizontal">
-                                    <Menu.Item  key="0">Hello Admin {user.name}
-                                    </Menu.Item>
-                                    <Menu.Item icon={<UserOutlined/>} key="1">
-                                        <Link to="/Admin">Users</Link>
-                                    </Menu.Item>
-                                    <Menu.Item icon={<LogoutOutlined/>} key="2" onClick={logout}>
-                                        Logout
-                                    </Menu.Item>
-                                    <Menu.Item icon={<ShoppingCartOutlined/>} key="3">
-                                        <Link to="/ShoppingCart">cart</Link>
-                                    </Menu.Item></Menu>
+                                    <Menu theme="dark" mode="horizontal">
+                                        <Menu.Item icon={<UserOutlined/>} key="0">Hello {user.name}
+                                        </Menu.Item>
+                                        <Menu.Item icon={<LogoutOutlined/>} key="1" onClick={logout}>
+                                            Logout
+                                        </Menu.Item>
+                                        <Menu.Item icon={<ShoppingCartOutlined/>} key="2">
+                                            <Link to="/ShoppingCart">cart</Link>
+                                        </Menu.Item>
+                                    </Menu> :
+                                    <Menu theme="dark" mode="horizontal">
+                                        <Menu.Item key="0">Hello Admin {user.name}
+                                        </Menu.Item>
+                                        <Menu.Item icon={<UserOutlined/>} key="1">
+                                            <Link to="/Admin">Users</Link>
+                                        </Menu.Item>
+                                        <Menu.Item icon={<LogoutOutlined/>} key="2" onClick={logout}>
+                                            Logout
+                                        </Menu.Item>
+                                        <Menu.Item icon={<ShoppingCartOutlined/>} key="3">
+                                            <Link to="/ShoppingCart">cart</Link>
+                                        </Menu.Item></Menu>
                             }
 
                         </div>
@@ -159,8 +154,18 @@ function App() {
                         <Content style={{minHeight: "100vh"}}>
                             <Switch>
                                 <Route exact path="/">
-                                    <div>
-                                        path=
+                                    <div className="content">
+                                        {products.length && products.map(product =>
+                                            <Product key={product.id}
+                                                     user={user}
+                                                     id={product.id}
+                                                     setUser={setUser}
+                                                     name={product.name}
+                                                     price={product.price}
+                                                     image={product.image}
+                                                     rating={product.rating}
+                                                     description={product.description}
+                                            />)}
                                     </div>
                                 </Route>
                                 <Route path="/login">

@@ -13,7 +13,7 @@ function Category({name, user, setUser}) {
     useEffect(getCategoryProducts, [name]);
 
     return (
-        <section className="category">
+        <section className="content">
             {products.map(product => <Product key={product.id}
                                               user={user}
                                               id={product.id}

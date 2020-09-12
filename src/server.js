@@ -227,7 +227,7 @@ app.post('/login', async (req, res, next) => {
     await updateObjectIndb("users", user, "logins", newLogins);
     req.session.key = user.id;
     req.session.cart = user.cart;
-    if (req.body.rememberme === 'true') {
+    if (req.body.rememberme === true) {
         req.session.cookie.maxAge = 2147483647;
     }
     let newSessions = await pushItemToObject(user, "sessions", req.session.id);
@@ -672,23 +672,20 @@ app.post('/checkout/:price', async (req, res) => {
  *  Status: ?% complete.
  */
 // TODO Test
-app.post('search/searchproduct', async (req, res) => {
+app.post('/search/product', async (req, res) => {
     if (!req.session.key) {
         res.status(401).json("Need to login first");
         return;
     }
-    let productsFind = (await whereSQLmain("users", "name", req.body.query)).valueOf();
-    if(!productsFind){
-        res.status(401).json("Error");
-    }
-    res.send(200).json(productsFind);
+    let productsFind = (await whereSQLmain("products", "name", req.body.query)).valueOf();
+    res.status(200).json(productsFind);
 });
 /** This function handles the search user by name feature in admin
  *  Base_Status: 100% complete.
  *  Status: 100% complete.
  */
 //TODO test
-app.post('admin/search/searchuser', async (req, res) => {
+app.post('/admin/search/searchuser', async (req, res) => {
     if (!req.session.key) {
         res.status(401).json("Need to login first");
         return;
@@ -699,7 +696,7 @@ app.post('admin/search/searchuser', async (req, res) => {
         return;
     }
     let usersFind = (await whereSQLmain("users", "name", req.body.query)).valueOf();
-    res.send(200).json(usersFind);
+    res.status(200).json(usersFind);
 });
 /** This function filters the products shown via category
  *  @param category = (req.params.category), is the product id given
