@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import 'antd/dist/antd.css'
-import { Form, Input, Button, notification} from 'antd';
+import { Form, Input, Button, notification,Checkbox} from 'antd';
 import Title from "antd/lib/typography/Title";
 import { Redirect } from 'react-router-dom';
 
@@ -9,10 +9,15 @@ const Login = (props) => {
     const [form] = Form.useForm();
     const [redirect, setRedirect] = useState(false);
     const [requiredMark, setRequiredMarkType] = useState('optional');
+    const [checked, setChecked] = React.useState(true);
 
     const onRequiredTypeChange = ({requiredMark}) => {
         setRequiredMarkType(requiredMark);
     };
+
+    function onChange(e) {
+        console.log(`checked = ${e.target.checked}`);
+    }
 
     const onLogin = values => {
         fetch('http://localhost:3001/login', {
@@ -52,6 +57,7 @@ const Login = (props) => {
             <Form.Item label="Password" name="password" required>
                 <Input type="password" id="password" name="password" placeholder="" />
             </Form.Item>
+            <Form.Item><Checkbox onChange={onChange}>Remember Me</Checkbox></Form.Item>
             <Form.Item>
                 <Button type="primary" htmlType="submit">Login</Button>
                 <Title style={{color: 'BLACK'}} level={1}></Title>

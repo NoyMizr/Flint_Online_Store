@@ -20,7 +20,20 @@ import AdminRow from "./components/AdminRow";
 const {Search} = Input;
 const {Header, Content, Sider} = Layout;
 
-
+const menu = (
+    <Menu>
+        <Menu.Item>
+            <a target="_blank" rel="noopener noreferrer" href="">
+                Product
+            </a>
+        </Menu.Item>
+        <Menu.Item>
+            <a target="_blank" rel="noopener noreferrer" href="">
+               Users
+            </a>
+        </Menu.Item>
+    </Menu>
+);
 const {SubMenu} = Menu;
 
 function App(name, id) {
@@ -64,37 +77,36 @@ function App(name, id) {
                             />
                         </div>
 
-                        {/*<div>*/}
-                        {/*    const menu= () => {*/}
-                        {/*    <Menu>*/}
-                        {/*        <Menu.Item>*/}
-                        {/*            <a target="_blank" rel="noopener noreferrer" href="http://www.alipay.com/">*/}
-                        {/*                1st menu item*/}
-                        {/*            </a>*/}
-                        {/*        </Menu.Item>*/}
-                        {/*        <Menu.Item>*/}
-                        {/*            <a target="_blank" rel="noopener noreferrer" href="http://www.taobao.com/">*/}
-                        {/*                2nd menu item*/}
-                        {/*            </a>*/}
-                        {/*        </Menu.Item>*/}
-                        {/*        <Menu.Item>*/}
-                        {/*            <a target="_blank" rel="noopener noreferrer" href="http://www.tmall.com/">*/}
-                        {/*                3rd menu item*/}
-                        {/*            </a>*/}
-                        {/*        </Menu.Item>*/}
-                        {/*        <Menu.Item danger>a danger item</Menu.Item>*/}
-                        {/*    </Menu>*/}
-                        {/*};*/}
+                        {/*{!user.permission_level === 1 ? <Dropdown overlay={menu}>*/}
+                        {/*    <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>*/}
+                        {/*        Select <DownOutlined/>*/}
+                        {/*    </a>*/}
+                        {/*</Dropdown> : <Dropdown overlay={menu}>*/}
+                        {/*    <b className="ant-dropdown-linkt" onClick={e => e.preventDefault()}>*/}
+                        {/*       <DownOutlined/>*/}
+                        {/*    </b>*/}
+                        {/*</Dropdown>*/}
+                        {/*}*/}
 
-                        {/*    ReactDOM.render(*/}
-                        {/*    <Dropdown overlay={menu}>*/}
-                        {/*        <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>*/}
-                        {/*            Hover me <DownOutlined />*/}
-                        {/*        </a>*/}
-                        {/*    </Dropdown>,*/}
-                        {/*    mountNode,*/}
-                        {/*    );*/}
-                        {/*</div>*/}
+
+
+                        {!user ? <Dropdown overlay={menu}>
+                            <b className="ant-dropdown-link4" onClick={e => e.preventDefault()}>
+                                <DownOutlined/>
+                            </b>
+                        </Dropdown>:!user.permission_level === 1 ? <Dropdown overlay={menu}>
+                            <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>
+                            <DownOutlined/>
+                            </a>
+                        </Dropdown> : <Dropdown overlay={menu} >
+                            <div style={{ marginLeft: '185px', color:'white'}}>
+                            <b className="ant-dropdown-linkt" onClick={e => e.preventDefault()} >
+                                Select <DownOutlined/>
+                            </b>
+                            </div>
+                        </Dropdown>
+                        }
+
 
                         <div>
                             {!user ? <Menu theme="dark" mode="horizontal"><Menu.Item icon={<ReadOutlined />} key="1">
@@ -128,6 +140,7 @@ function App(name, id) {
                                         <Link to="/ShoppingCart">cart</Link>
                                     </Menu.Item></Menu>
                             }
+
                         </div>
                     </Header>
                     <Layout>
