@@ -250,7 +250,7 @@ app.post('/login', async (req, res, next) => {
 });
 
 /**
- *
+ * Get the user's info while using if he has an active session
  */
 app.get('/connected-user', async (req, res, next) => {
     if (!req.session.key) {
@@ -408,7 +408,7 @@ app.post('/admin/editproduct', async (req, res,next) => {
         return;
 
     }
-    let product = (await whereSQLmain("products", "id", req.body.product)).valueOf()[0];
+    let product = (await whereSQLmain("products", "id", req.body.productID)).valueOf()[0];
     if (!product) {
         try {
             throw new ErrorHandler(500, "Product not found");
@@ -439,7 +439,7 @@ app.post('/admin/editproduct', async (req, res,next) => {
             }
             return;
         }
-    }else if (field === "image") {
+    } else if (field === "image") {
         newValue = `${imagesPath}/${newValue}`;
         if (!newValue) {
             //error

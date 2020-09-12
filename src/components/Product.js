@@ -30,6 +30,7 @@ function Product(props) {
 
         <Space direction="vertical">
             <Card type="text" id="name" title={product.name} style={{width: 300}}>
+                {props.user.permission_level ===1 ? <Link to={`/edit/${product.id}`}>Edit</Link> : ''}
                 <div style={{height: '150px'}}>
                     <img src={product.image} width={100}/>
                 </div>

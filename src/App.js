@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'antd/dist/antd.css';
-import {BrowserRouter as Router, Switch, Route, Link, withRouter } from 'react-router-dom';
+import {BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import {Layout, Menu, Input, notification} from 'antd';
 import Title from 'antd/lib/typography/Title';
 import {
@@ -21,6 +21,7 @@ import RatingPage from "./components/RatingPage";
 import Admin from "./components/Admin";
 import Product from "./components/Product";
 import axios from 'axios';
+import EditProduct from "./components/EditProduct";
 
 const {Search} = Input;
 const {Header, Content, Sider} = Layout;
@@ -34,7 +35,7 @@ function App() {
             .then(res => {
                 if (res) setUser(res.data)
             })
-            .catch(err => console.log(err))
+            .catch(err => notification.error({message: "Error: " + err}))
     }, [])
 
     const searchProducts = searchString => {
@@ -49,7 +50,7 @@ function App() {
             })
         })
             .then(res => res.json())
-            .then(data => setSearchedProducts(data))
+            .then(data => setSearchedProducts(data)).catch(err => notification.error("Error: " + err))
     }
 
     const logout = () => {
@@ -198,6 +199,8 @@ function App() {
                                 </Route>
                                 <Route exact path={"/CheckOut"}>
                                     <CheckOut cart={user.cart}/>
+                                </Route>
+                                <Route path={"/edit/:productID"} component={EditProduct}>
                                 </Route>
                                 <Route path={'/RatingPage/:productName/:productID'} component={RatingPage}/>
                                 <Route path={'/Admin'}>
