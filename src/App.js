@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'antd/dist/antd.css';
 import {BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
-import {Layout, Menu, Input, notification} from 'antd';
+import {Layout, Menu, Input, notification, Dropdown} from 'antd';
 import Title from 'antd/lib/typography/Title';
 import {UserOutlined, LoginOutlined, UserAddOutlined, ShoppingCartOutlined, LogoutOutlined,ReadOutlined, DownOutlined} from '@ant-design/icons';
 import Login from "./components/Login";
@@ -16,6 +16,20 @@ import axios from 'axios';
 
 const {Search} = Input;
 const {Header, Content, Sider} = Layout;
+const menu = (
+    <Menu>
+        <Menu.Item>
+            <a target="_blank" rel="noopener noreferrer" href="">
+                Product
+            </a>
+        </Menu.Item>
+        <Menu.Item>
+            <a target="_blank" rel="noopener noreferrer" href="">
+                Users
+            </a>
+        </Menu.Item>
+    </Menu>
+);
 
 function App() {
     const [user, setUser] = useState(null);
@@ -37,7 +51,6 @@ function App() {
             .then(response => response.json())
             .catch(error => notification.error({message: 'Error: ' + error}));
     };
-    console.log(user);
     return (
         <Router>
             <div className="App">
@@ -56,6 +69,23 @@ function App() {
                                 style={{width: 300}}
                             />
                         </div>
+
+                        {!user ? <Dropdown overlay={menu}>
+                            <b className="ant-dropdown-link4" onClick={e => e.preventDefault()}>
+                                <DownOutlined/>
+                            </b>
+                        </Dropdown>:!user.permission_level === 1 ? <Dropdown overlay={menu}>
+                            <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>
+                                <DownOutlined/>
+                            </a>
+                        </Dropdown> : <Dropdown overlay={menu} >
+                            <div style={{ marginLeft: '185px', color:'white'}}>
+                                <b className="ant-dropdown-linkt" onClick={e => e.preventDefault()} >
+                                    Select <DownOutlined/>
+                                </b>
+                            </div>
+                        </Dropdown>
+                        }
 
                         <div>
                             {!user ? <Menu theme="dark" mode="horizontal"><Menu.Item icon={<ReadOutlined />} key="1">
@@ -89,6 +119,7 @@ function App() {
                                         <Link to="/ShoppingCart">cart</Link>
                                     </Menu.Item></Menu>
                             }
+
                         </div>
                     </Header>
                     <Layout>
