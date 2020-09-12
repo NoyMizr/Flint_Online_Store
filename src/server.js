@@ -532,7 +532,6 @@ app.post('/cart/:product/addone', async (req, res, next) => {
     await updateObjectIndb("users", user, "cart", newCart);
     req.session.cart = newCart;
     res.status(200).send(newCart);
-    //res.status(200).send(message);
 });
 
 /** This function allows to decrease the quantity of a product that already is the cart by 1

@@ -185,7 +185,7 @@ function App() {
                                     <Category name={'storage'} user={user} setUser={setUser}/>
                                 </Route>
                                 {user && <Route path={"/ShoppingCart"}>
-                                    <ShoppingCart cart={user.cart}/>
+                                    <ShoppingCart cart={user.cart} user={user} setUser={setUser}/>
                                 </Route>}
                                 <Route exact path={"/CheckOut"}>
                                     <CheckOut/>

@@ -1,18 +1,35 @@
-import React, {useState} from 'react';
-import {Layout, Breadcrumb, Row, Col, Table, Space, Divider, Statistic, Button, Form,} from 'antd';
+import React, {useEffect, useState} from 'react';
+import {Layout, Breadcrumb, Row, Col, Table, Space, Divider, Statistic, Button, Form, Input} from 'antd';
 import {CreditCardOutlined, DeleteOutlined, ShoppingOutlined} from '@ant-design/icons';
 import Title from "antd/lib/typography/Title";
 import {BrowserRouter as Router} from "react-router-dom";
+import axios from 'axios';
 
 const {Content} = Layout;
 
+const ShopppingCart = ({user, setUser}) => {
+    const [cart, setCart] = useState([]);
+    const amountColumn = (amount, record) =>
+        <div style={{ alignItems: 'center', display: 'inline-flex' }}>
+            <Button onClick={() => changeProductAmount(record.id, 'removeone')}>-</Button>
+            {amount}
+            <Button onClick={() => changeProductAmount(record.id, 'addone')}>+</Button>
+        </div>
 
-const ShopppingCart = ({cart}) => {
-    const formattedCart = cart.map(product => ({
-        ...product.product,
-        quantity: product.quantity,
-        total: product.product.price * product.quantity
-    }));
+    useEffect(() => {
+        setCart(user.cart.map(product => ({
+            ...product.product,
+            quantity: product.quantity,
+            total: product.product.price * product.quantity
+        }))
+        )
+    }, [user])
+
+    const changeProductAmount = (productID, action) => {
+        axios.post(`http://localhost:3001/cart/${productID}/${action}`, {}, {withCredentials: true})
+            .then(res => {setUser({...user, cart: res.data})})
+    }
+
     const onClear = () => {
         fetch("http://localhost:3001/cart/emptycart",
             {
@@ -43,13 +60,21 @@ const ShopppingCart = ({cart}) => {
             key: 'description',
         },
         {
+            title: '',
+            dataIndex: 'id',
+            key: 'id',
+            render: id => <p style={{display: "none"}}>{id}</p>
+        },
+        {
             title: 'Price',
             dataIndex: 'price',
             key: 'price',
-        }, {
+        },
+        {
             title: 'Amount',
             dataIndex: 'quantity',
             key: 'quantity',
+            render: amountColumn
         }, {
             title: 'Total Price',
             dataIndex: 'total',
@@ -57,9 +82,7 @@ const ShopppingCart = ({cart}) => {
         },
     ];
 
-    // const total = [0];
-    // props.cart.forEach((elem) => total.push(+elem.itemPrice.replace('$', '')));
-    console.log(cart);
+    console.log(user.cart);
 
     return (
         <Router>
@@ -93,7 +116,7 @@ const ShopppingCart = ({cart}) => {
                                 </Button>
                             </Col>
                         </Row>
-                        <Table columns={columns} dataSource={formattedCart} pagination={false}/>
+                        <Table columns={columns} dataSource={cart} pagination={false}/>
                         <Row justify='start'>
 
                         </Row>
