@@ -27,10 +27,6 @@ const app = express();
 // const imagesPath = path.join(__dirname, '/images');
 const imagesPath = '/images';
 
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
-}));
 app.use(bodyParse.json());
 app.use(bodyParse.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -45,6 +41,13 @@ app.use(session({
         maxAge: 1000 * 60 * 30, // session max age in miliseconds
     }
 }));
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
+
+
 redisClient.on("connect", function () {
     console.log("You are now connected");
 });
@@ -59,6 +62,7 @@ class ErrorHandler extends Error {
 
 const handleError = (err, res) => {
     const {statusCode, message} = err;
+    res.setHeader('Content-Type', 'application/json');
     res.status(statusCode).json({
         status: "error",
         statusCode,
@@ -66,9 +70,6 @@ const handleError = (err, res) => {
     });
 };
 
-app.use((err, req, res, next) => {
-    handleError(err, res);
-});
 /** This Function is a Helper debugging function that print all users
  *  Base_Status: 100% complete.
  *  Status: 100% complete.
@@ -185,8 +186,13 @@ app.post('/register', async (req, res, next) => {
 app.post('/login', async (req, res, next) => {
     // getting the parameter from the request
     if (req.session.key) {
+        try {
+            throw new ErrorHandler(401, 'Already logged in')
+        } catch (err) {
+            next(err)
+        }
         //throw new ErrorHandler(401, 'already logged in')
-        res.status(401).send({error: "already logged in"});
+        //res.status(401).send({error: "already logged in"});
         return;
     }
     let email = req.body.email;
@@ -227,30 +233,50 @@ app.post('/login', async (req, res, next) => {
     //   req.session.client_id = user[0].id;
     req.session.key = user.id;
     req.session.cart = user.cart;
+    req.cookies.userid = user.id;
+    req.session.cookie.userid = user.id;
     let newSessions = await pushItemToObject(user, "sessions", req.session.id);
     await updateObjectIndb("users", user, "sessions", newSessions);
     res.status(200).json(user);
     console.log("Log In Successfully");
+});
+
+app.get('/connected-user', async (req, res, next) => {
+    if (!req.session.key) {
+        try {
+            throw new ErrorHandler(401, 'Not Logged In')
+        } catch (err) {
+            next(err)
+        }
+        //res.status(401).send({user: ''});
+        return;
+    }
+    const user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
+    res.status(200).send(user);
 })
-;
 
 
 /** This Function is logout function, and destroys the session
  *  Base_Status: 100% complete.
  *  Status: 90% complete.
  */
-app.post('/logout', function (req, res) {
+app.post('/logout', function (req, res, next) {
     if (!req.session.key) {
-        res.status(401).json("Cant log out if not logged in");
-        return;
-    }
-    req.session.destroy(function (err) {
-        if (err) {
-            console.log(err);
-        } else {
-            res.redirect("localhost:3001/");//
+        try {
+            throw new ErrorHandler(401, 'Already Logged Out')
+        } catch (err) {
+            next(err)
         }
-    });
+        return;
+    } else {
+        req.session.destroy(function (err) {
+            if (err) {
+                console.log(err);
+            } else {
+                res.status(200).send({message: "Logged Out Successfully"});
+            }
+        });
+    }
 });
 
 
@@ -259,13 +285,6 @@ app.post('/logout', function (req, res) {
  */
 app.get('/', (req, res) => {
     res.send("Hello");
-});
-
-/**Temp method for main page
- * maybe change to redirection to the main store?
- */
-app.get('/login', (req, res) => {
-    res.send("Hello login");
 });
 
 /** This function is admin only function , and returns all the non admin users data exluding the password from db
@@ -456,7 +475,7 @@ app.post('/products/:product', async (req, res) => {
  */
 //let id = req.session.key; // create var name
 app.post('/products/:product/addtocart', async (req, res) => {
-    if (!req.session.key) {
+    if (!req.session.id) {
         res.status(401).json("Please Login");
         return;
     }
@@ -467,7 +486,7 @@ app.post('/products/:product/addtocart', async (req, res) => {
         res.status(401).send("error");
         return;
     }
-    let cart = req.session.cart;
+    let cart = user.cart;
     let index = await findProductInCart(cart, product.id);
     let result;
     let message;
@@ -1457,6 +1476,10 @@ async function setBaseDB() {
 // }
 
 setBaseDB();
+
+app.use((err, req, res, next) => {
+    handleError(err, res);
+});
 
 // Server listening
 app.listen(port, () => {
