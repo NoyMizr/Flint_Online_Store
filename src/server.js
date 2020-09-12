@@ -268,6 +268,7 @@ app.post('/logout', function (req, res, next) {
             if (err) {
                 console.log(err);
             } else {
+                res.clearCookie('connect.sid', {path: '/'});
                 res.status(200).send({message: "Logged Out Successfully"});
             }
         });
