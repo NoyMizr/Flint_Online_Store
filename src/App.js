@@ -152,6 +152,14 @@ function App() {
 
                         <Content style={{minHeight: "100vh"}}>
                             <Switch>
+                                <Route path="/login">
+                                    <Login setUser={setUser}/>
+                                </Route>
+                                <Route path="/register">
+                                    <Registration user={'bla'}/>
+                                </Route>
+                            </Switch>
+                            {user && <Switch>
                                 <Route exact path="/">
                                     <div className="content">
                                         {products.length && products.map(product =>
@@ -166,12 +174,6 @@ function App() {
                                                      description={product.description}
                                             />)}
                                     </div>
-                                </Route>
-                                <Route path="/login">
-                                    <Login setUser={setUser}/>
-                                </Route>
-                                <Route path="/register">
-                                    <Registration user={'bla'}/>
                                 </Route>
                                 <Route exact path={'/camping_accessories'}>
                                     <Category name={'camping_accessories'} user={user} setUser={setUser}/>
@@ -191,19 +193,17 @@ function App() {
                                 <Route path={'/all_products'}>
                                     <Category user={user} setUser={setUser}/>
                                 </Route>
-                                {user && <Route path={"/ShoppingCart"}>
+                                <Route path={"/ShoppingCart"}>
                                     <ShoppingCart cart={user.cart} user={user} setUser={setUser}/>
-                                </Route>}
-                                {user && <Route exact path={"/CheckOut"}>
-                                    <CheckOut cart={user.cart}/>
-                                </Route>}
-                                <Route path={'/RatingPage/:productName/:productID'} component={RatingPage}>
-                                    {/*<RatingPage/>*/}
                                 </Route>
+                                <Route exact path={"/CheckOut"}>
+                                    <CheckOut cart={user.cart}/>
+                                </Route>
+                                <Route path={'/RatingPage/:productName/:productID'} component={RatingPage}/>
                                 <Route path={'/Admin'}>
                                     <Admin/>
                                 </Route>
-                            </Switch>
+                            </Switch>}
                         </Content>
                     </Layout>
                 </Layout>

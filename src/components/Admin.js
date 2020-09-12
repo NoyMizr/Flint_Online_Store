@@ -3,7 +3,6 @@ import {Layout, Breadcrumb, Row, Col, Table, Space, Divider, Statistic, Button, 
 import {CreditCardOutlined, DeleteOutlined} from '@ant-design/icons';
 import Title from "antd/lib/typography/Title";
 import {BrowserRouter as Router} from "react-router-dom";
-import AdminRow from "./AdminRow";
 
 const {Content} = Layout;
 
@@ -27,6 +26,8 @@ const Admin = (props) => {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
+            filters: users.map(user => ({text: user.name, value: user.name})),
+            onFilter: (value, record) => record.name.indexOf(value) === 0,
         },
         {
             title: 'Email',
@@ -43,16 +44,12 @@ const Admin = (props) => {
             key: 'logins',
             render: logins => logins.map(login => <div>{login}</div>)
         },
-        // {
-        //     title: 'Last Purchase',
-        //     dataIndex: 'lastPurchase',
-        //     key: 'lastPurchase',
-        // },
-        // {
-        //     title: 'Full History Of Purchase',
-        //     dataIndex: 'purchases',
-        //     key: 'purchases',
-        // },
+        {
+            title: 'Full History Of Purchase',
+            dataIndex: 'purchases',
+            key: 'purchases',
+            render: purchases => purchases.map(purchase => <div>Price: {purchase.price}, Date: {purchase.date}</div>)
+        },
     ];
 
     console.log(users);
