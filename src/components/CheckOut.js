@@ -122,7 +122,6 @@ const CheckOut = (props) => {
                         </Form.Item>
 
                         <Form.Item>
-
                             <Button type="primary" htmlType="submit">Place Order<CheckOutlined /></Button>
                         </Form.Item>
                     </Form>

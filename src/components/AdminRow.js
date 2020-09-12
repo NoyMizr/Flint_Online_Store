@@ -17,9 +17,6 @@ function AdminRow(props) {
     return (
             <div style={{background:'lightgrey', marginTop: '100px'}}>
                 {/*<section className="category">*/}
-
-
-
                 {/*</section>*/}
                 <Divider></Divider>
                 <Row>

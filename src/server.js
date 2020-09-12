@@ -227,7 +227,7 @@ app.post('/login', async (req, res, next) => {
     await updateObjectIndb("users", user, "logins", newLogins);
     req.session.key = user.id;
     req.session.cart = user.cart;
-    if (req.body.rememberme === true) {
+    if (req.body.rememberme === 'true') {
         req.session.cookie.maxAge = 2147483647;
     }
     let newSessions = await pushItemToObject(user, "sessions", req.session.id);

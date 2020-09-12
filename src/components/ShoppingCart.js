@@ -10,7 +10,7 @@ const {Content} = Layout;
 const ShopppingCart = ({user, setUser}) => {
     const [cart, setCart] = useState([]);
     const amountColumn = (amount, record) =>
-        <div style={{ alignItems: 'center', display: 'inline-flex' }}>
+        <div style={{alignItems: 'center', display: 'inline-flex'}}>
             <Button onClick={() => changeProductAmount(record.id, 'removeone')}>-</Button>
             {amount}
             <Button onClick={() => changeProductAmount(record.id, 'addone')}>+</Button>
@@ -18,16 +18,18 @@ const ShopppingCart = ({user, setUser}) => {
 
     useEffect(() => {
         setCart(user.cart.map(product => ({
-            ...product.product,
-            quantity: product.quantity,
-            total: product.product.price * product.quantity
-        }))
+                ...product.product,
+                quantity: product.quantity,
+                total: product.product.price * product.quantity
+            }))
         )
     }, [user])
 
     const changeProductAmount = (productID, action) => {
         axios.post(`http://localhost:3001/cart/${productID}/${action}`, {}, {withCredentials: true})
-            .then(res => {setUser({...user, cart: res.data})})
+            .then(res => {
+                setUser({...user, cart: res.data})
+            })
     }
 
     const onClear = () => {
@@ -38,10 +40,10 @@ const ShopppingCart = ({user, setUser}) => {
                     'Content-Type': 'application/json',
                 },
                 credentials: 'include',
-                body: JSON.stringify(),
             })
             .then(response => response.json())
             .then(data => {
+                setUser({...user, cart: []})
                 console.log('Success:', data);
             })
             .catch((error) => {

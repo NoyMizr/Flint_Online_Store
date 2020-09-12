@@ -15,11 +15,8 @@ const Login = (props) => {
         setRequiredMarkType(requiredMark);
     };
 
-    function onChange(e) {
-        console.log(`checked = ${e.target.checked}`);
-    }
-
     const onLogin = values => {
+        console.log(values);
         fetch('http://localhost:3001/login', {
             method: 'POST', // or 'PUT'
             headers: {
@@ -29,7 +26,8 @@ const Login = (props) => {
             credentials: 'include',
             body: JSON.stringify({
                 email: values.email,
-                password: values.password
+                password: values.password,
+                rememberme: values.rememberme,
             }),
         })
             .then(response => response.json())
@@ -58,11 +56,9 @@ const Login = (props) => {
             <Form.Item label="Password" name="password" required>
                 <Input type="password" id="password" name="password" placeholder="" />
             </Form.Item>
-            <Form.Item><Checkbox onChange={onChange}>Remember Me</Checkbox></Form.Item>
+            <Form.Item name='rememberme' valuePropName="checked" initialValue={true}><Checkbox>Remember Me</Checkbox></Form.Item>
             <Form.Item>
                 <Button type="primary" htmlType="submit">Login</Button>
-                <Title style={{color: 'BLACK'}} level={1}></Title>
-                <Title style={{color: 'BLACK'}} level={1}></Title>
                 <Title style={{color: 'BLACK'}} level={5}>New to Flint?</Title>
                 <div className="site-button-ghost-wrapper">
                 <Button  type="primary" ghost onClick={() => window.location.href='/register'}>
