@@ -197,8 +197,8 @@ function App() {
                                 {user && <Route exact path={"/CheckOut"}>
                                     <CheckOut cart={user.cart}/>
                                 </Route>}
-                                <Route path={'/RatingPage'}>
-                                    <RatingPage/>
+                                <Route path={'/RatingPage/:productName/:productID'} component={RatingPage}>
+                                    {/*<RatingPage/>*/}
                                 </Route>
                                 <Route path={'/Admin'}>
                                     <Admin/>

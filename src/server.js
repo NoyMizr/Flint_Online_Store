@@ -763,7 +763,7 @@ app.post('admin/:user/purchases', async (req, res) => {
  * problem : need to lock somehow the user from double voting, bought item in past, only if logged in ..
  */
 // TODO test
-app.post('products/:product/rating/:rating', async (req, res) => {
+app.post('/products/:product/rating/:rating', async (req, res) => {
     // if not logged in -> error
     if (!req.session.key) {
         res.status(401).json("Please Login");
@@ -809,10 +809,9 @@ app.post('products/:product/rating/:rating', async (req, res) => {
     await updateObjectIndb("products", product, "usersVoted", newUserVoted);
     await updateObjectIndb("products", product, "sumratings", newsumratings);
     await updateObjectIndb("products", product, "rating", newrating);
-
-
-
+    res.status(200).json({message: 'Updated Rate'})
 });
+
 /** this function generate new key for user and products
  *  if we run into an old key it regenerate
  *

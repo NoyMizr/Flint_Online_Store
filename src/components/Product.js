@@ -37,10 +37,9 @@ function Product(props) {
                 <p type="text" id="desc" style={{height: '70px'}}>Description: {product.description}</p>
                 <p type="text" id="price">Price: {product.price}$</p>
                 <p type="text" id="desc">Rate:<Rate disabled defaultValue={product.rating}/></p>
-                {/*<button type="submit" formAction="./ShoppingCart">Add To Cart</button>*/}
                 <Layout>
-                    <Link to="/RatingPage">
-                        <Text underline id={product.id}>Rate This Product!</Text>
+                    <Link to={`/RatingPage/${product.name}/${product.id}`}>
+                        <Text underline >Rate This Product!</Text>
                     </Link>
                 </Layout>
                 <br></br>
@@ -48,16 +47,6 @@ function Product(props) {
                 <Button type="primary" onClick={onClick}>
                     Add To Cart
                 </Button>
-
-
-                {/*<Button  type="primary" ghost onClick={() => window.location.href='/ShoppingCart'}>*/}
-                {/*    Add To Cart*/}
-                {/*</Button>*/}
-
-
-                {/*// <Link to="/shoppingcart">*/}
-                {/*// </Link>*/}
-
             </Card>
         </Space>
 

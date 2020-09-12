@@ -48,11 +48,11 @@ const Admin = (props) => {
         //     dataIndex: 'lastPurchase',
         //     key: 'lastPurchase',
         // },
-        {
-            title: 'Full History Of Purchase',
-            dataIndex: 'purchases',
-            key: 'purchases',
-        },
+        // {
+        //     title: 'Full History Of Purchase',
+        //     dataIndex: 'purchases',
+        //     key: 'purchases',
+        // },
     ];
 
     console.log(users);
