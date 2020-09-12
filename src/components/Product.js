@@ -19,11 +19,11 @@ function Product(props) {
     const onClick = () => {
         axios.post(`http://localhost:3001/products/${product.id}/addtocart`, null, {withCredentials: true})
             .then(data => {
-                console.log(data)
-                notification.info({message: 'Success: ' + data.data});
+                props.setUser({...props.user, cart: data.data})
+                notification.info({message: `Success! Added ${product.name} to cart`});
             })
             .catch(error => {
-                notification.error({message: 'Error: ' + error});
+                notification.error({message: 'Failed: ' + error});
             });
     };
     return (

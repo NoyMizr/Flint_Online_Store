@@ -33,6 +33,7 @@ const menu = (
 
 function App() {
     const [user, setUser] = useState(null);
+
     useEffect(() => {
         axios.get('http://localhost:3001/connected-user', {withCredentials: true})
             .then(res => {if(res) setUser(res.data)})
@@ -51,8 +52,6 @@ function App() {
             .then(response => response.json())
             .catch(error => notification.error({message: 'Error: ' + error}));
     };
-
-    console.log(user);
 
     return (
         <Router>
@@ -171,19 +170,19 @@ function App() {
                                     <Registration user={'bla'}/>
                                 </Route>
                                 <Route exact path={'/camping_accessories'}>
-                                    <Category name={'camping_accessories'}/>
+                                    <Category name={'camping_accessories'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route exact path={'/clothing'}>
-                                    <Category name={'clothing'}/>
+                                    <Category name={'clothing'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route exact path={'/culinary'}>
-                                    <Category name={'culinary'}/>
+                                    <Category name={'culinary'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route path={'/hiking_gear'}>
-                                    <Category name={'hiking_gear'}/>
+                                    <Category name={'hiking_gear'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route path={'/storage'}>
-                                    <Category name={'storage'}/>
+                                    <Category name={'storage'} user={user} setUser={setUser}/>
                                 </Route>
                                 {user && <Route path={"/ShoppingCart"}>
                                     <ShoppingCart cart={user.cart}/>

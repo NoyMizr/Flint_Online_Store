@@ -14,17 +14,12 @@ const bodyParse = require("body-parser");
 const session = require("express-session");
 const connectRedis = require("connect-redis");
 const fetch = require("node-fetch");
-
-// const bcrypt = require("bcrypt");
-// const cryptoJs = require("crypto-js");
 const redisStore = connectRedis(session);
 
 // create server and connectivity to redis db
 const port = process.env.PORT || 3001;
 const redisClient = redis.createClient({host: "127.0.0.1", port: 6379});
 const app = express();
-//const router = express.Router();
-// const imagesPath = path.join(__dirname, '/images');
 const imagesPath = '/images';
 
 app.use(bodyParse.json());
