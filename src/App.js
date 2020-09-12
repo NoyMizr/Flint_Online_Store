@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'antd/dist/antd.css';
-import {BrowserRouter as Router, Switch, Route, Link} from 'react-router-dom';
-import {Layout, Menu, Input, notification, Dropdown} from 'antd';
+import {BrowserRouter as Router, Switch, Route, Link, withRouter } from 'react-router-dom';
+import {Layout, Menu, Input, notification} from 'antd';
 import Title from 'antd/lib/typography/Title';
 import {
     UserOutlined,
@@ -11,7 +11,6 @@ import {
     ShoppingCartOutlined,
     LogoutOutlined,
     ReadOutlined,
-    DownOutlined
 } from '@ant-design/icons';
 import Login from "./components/Login";
 import Registration from "./components/Registration";
@@ -20,8 +19,8 @@ import Category from "./components/Category";
 import CheckOut from "./components/CheckOut";
 import RatingPage from "./components/RatingPage";
 import Admin from "./components/Admin";
-import axios from 'axios';
 import Product from "./components/Product";
+import axios from 'axios';
 
 const {Search} = Input;
 const {Header, Content, Sider} = Layout;
@@ -139,14 +138,14 @@ function App() {
                                     <Link to="/culinary">Culinary</Link>
                                 </Menu.Item>
                                 <Menu.Item key="4">
-                                    <Link to="/hiking gear">Hiking gear</Link>
+                                    <Link to="/hiking_gear">Hiking gear</Link>
                                 </Menu.Item>
                                 <Menu.Item key="5">
                                     <Link to="/storage">Storage</Link>
                                 </Menu.Item>
-                                <Menu.Item key="6">
-                                    <Link to="/general">General</Link>
-                                </Menu.Item>
+                                {/*<Menu.Item key="6">*/}
+                                {/*    <Link to="/all_products">All Products</Link>*/}
+                                {/*</Menu.Item>*/}
                             </Menu>
                         </Sider>}
 
@@ -189,12 +188,15 @@ function App() {
                                 <Route path={'/storage'}>
                                     <Category name={'storage'} user={user} setUser={setUser}/>
                                 </Route>
+                                <Route path={'/all_products'}>
+                                    <Category user={user} setUser={setUser}/>
+                                </Route>
                                 {user && <Route path={"/ShoppingCart"}>
                                     <ShoppingCart cart={user.cart} user={user} setUser={setUser}/>
                                 </Route>}
-                                <Route exact path={"/CheckOut"}>
-                                    <CheckOut/>
-                                </Route>
+                                {user && <Route exact path={"/CheckOut"}>
+                                    <CheckOut cart={user.cart}/>
+                                </Route>}
                                 <Route path={'/RatingPage'}>
                                     <RatingPage/>
                                 </Route>

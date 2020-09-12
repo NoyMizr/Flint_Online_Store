@@ -5,7 +5,7 @@ function Category({name, user, setUser}) {
     const [products, setProducts] = useState([]);
 
     const getCategoryProducts = () => {
-        fetch("http://localhost:3001/categories/" + name)
+        fetch(`http://localhost:3001/categories/${name || ''}`)
             .then(res => res.json())
             .then(data => setProducts(data))
     }

@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {Layout, Breadcrumb, Row, Col, Table, Space, Divider, Statistic, Button, Form, Input} from 'antd';
-import {CreditCardOutlined, DeleteOutlined, ShoppingOutlined} from '@ant-design/icons';
+import {DeleteOutlined, ShoppingOutlined} from '@ant-design/icons';
 import Title from "antd/lib/typography/Title";
-import {BrowserRouter as Router} from "react-router-dom";
+import {BrowserRouter as Router, Redirect} from "react-router-dom";
 import axios from 'axios';
 
 const {Content} = Layout;
@@ -84,23 +84,9 @@ const ShopppingCart = ({user, setUser}) => {
         },
     ];
 
-    console.log(user.cart);
-
     return (
         <Router>
             <div>
-                <section className="category">
-                    {/*{cart.map(row => <CartRow key={row.product.id}*/}
-                    {/*                          id={row.product.id}*/}
-                    {/*                          image={row.product.image}*/}
-                    {/*                          name={row.product.name}*/}
-                    {/*                          price={row.product.price}*/}
-                    {/*                          description={row.product.description}*/}
-                    {/*                          quantity={row.quantity}*/}
-                    {/*                          total={Number(row.quantity) * Number(row.product.price)}*/}
-                    {/*/>)}*/}
-
-                </section>
                 <Layout>
                     <Content className='site-layout-background'>
                         <header><Title style={{
@@ -127,7 +113,7 @@ const ShopppingCart = ({user, setUser}) => {
                                 <Button style={{
                                     marginTop: 16, marginLeft: '500px',
                                     marginRight: '600px'
-                                }} type='primary' onClick={() => window.location.href = "/CheckOut"}>
+                                }} type='primary' onClick={() => window.location.href = "/CheckOut"} disabled={!user.cart.length}>
                                     Check out <ShoppingOutlined/>
                                 </Button>
                             </Col>

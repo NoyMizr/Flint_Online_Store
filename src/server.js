@@ -703,9 +703,9 @@ app.post('/admin/search/searchuser', async (req, res) => {
  *  Base_Status: 100% complete.
  *  Status: 100% complete.
  */
-app.get('/categories/:category', async (req, res) => {
-    // if category === "general" ->all
+app.get('/categories/:category?', async (req, res) => {
     let category = req.params.category;
+    console.log(category);
     let afterFilter;
     if (category === undefined) {
         afterFilter = await getallType("products");
