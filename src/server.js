@@ -225,11 +225,11 @@ app.post('/login', async (req, res, next) => {
     let newLogins = await pushItemToObject(user, "logins", date);
     // We Update the DB accordingly
     await updateObjectIndb("users", user, "logins", newLogins);
-    //   req.session.client_id = user[0].id;
     req.session.key = user.id;
     req.session.cart = user.cart;
-    req.cookies.userid = user.id;
-    req.session.cookie.userid = user.id;
+    if (req.body.rememberme === true) {
+        req.session.cookie.maxAge = 2147483647;
+    }
     let newSessions = await pushItemToObject(user, "sessions", req.session.id);
     await updateObjectIndb("users", user, "sessions", newSessions);
     res.status(200).json(user);
@@ -615,6 +615,7 @@ app.post('/cart/emptycart', async (req, res) => {
     await updateObjectIndb("users", user, "cart", []);
     res.status(200).send("Cart was successfully emptied");
 });
+
 /** This function peforms a "checkout"
  *  the process includes
  *  A) Check validity from front
@@ -624,7 +625,6 @@ app.post('/cart/emptycart', async (req, res) => {
  *  Base_Status: 100% complete.
  *  Status: 100% complete.
  */
-
 app.post('/checkout/:price', async (req, res) => {
     if (!req.session.key) {
         res.status(401).json("Please Login");
