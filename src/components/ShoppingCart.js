@@ -2,14 +2,17 @@ import React, {useState} from 'react';
 import {Layout, Breadcrumb, Row, Col, Table, Space, Divider, Statistic, Button, Form,} from 'antd';
 import {CreditCardOutlined, DeleteOutlined, ShoppingOutlined} from '@ant-design/icons';
 import Title from "antd/lib/typography/Title";
-import {BrowserRouter as Router, Link} from "react-router-dom";
-import CartRow from "./CartRow";
+import {BrowserRouter as Router} from "react-router-dom";
 
 const {Content} = Layout;
 
 
 const ShopppingCart = ({cart}) => {
-    const formattedCart = cart.map(product => ({...product.product, quantity: product.quantity}))
+    const formattedCart = cart.map(product => ({
+        ...product.product,
+        quantity: product.quantity,
+        total: product.product.price * product.quantity
+    }));
     const onClear = () => {
         fetch("http://localhost:3001/cart/emptycart",
             {
@@ -33,7 +36,6 @@ const ShopppingCart = ({cart}) => {
             title: 'Product',
             dataIndex: 'name',
             key: 'name',
-            render: text => <a>{text}</a>,
         },
         {
             title: 'Description',
@@ -95,7 +97,6 @@ const ShopppingCart = ({cart}) => {
                         <Row justify='start'>
 
                         </Row>
-                        <br></br>
                         <Row justify='end'>
                             <Col>
                                 <Button style={{
