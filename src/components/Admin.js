@@ -1,13 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {Layout, Breadcrumb, Row, Col, Table, Space, Divider, Statistic, Button, Form, Radio, Input} from 'antd';
-import {CreditCardOutlined, DeleteOutlined} from '@ant-design/icons';
+import {Layout, Row, Col, Table} from 'antd';
 import Title from "antd/lib/typography/Title";
 import {BrowserRouter as Router} from "react-router-dom";
 
 const {Content} = Layout;
 
 
-const Admin = (props) => {
+const Admin = () => {
     const [users, setUsers] = useState([]);
     const getUsers = () => {
         fetch('http://localhost:3001/admin/users', {

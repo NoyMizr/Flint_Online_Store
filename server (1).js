@@ -263,6 +263,14 @@ app.get('/connected-user', async (req, res, next) => {
         return;
     }
     const user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
+    if (!user) {
+        try {
+            throw new ErrorHandler(500, "Unexpected error");
+        } catch (err) {
+            next(err);
+        }
+        return;
+    }
     res.status(200).send(user);
 });
 
@@ -281,7 +289,7 @@ app.post('/logout', function (req, res, next) {
         req.session.destroy(function (err) {
             if (err) {
                 console.log(err);
-            } else {
+            }else {
                 res.clearCookie('connect.sid',{path:'/'});
                 res.status(200).send({message:"Logged out Succesfully"});
             }
@@ -796,7 +804,7 @@ app.post('/checkout/:price', async (req, res, next) => {
     await updateObjectIndb("users", user, "purchases", newPurchases);
     await updateObjectIndb("users", user, "cart", []);
     req.session.cart = [];
-    res.status(200).json("Purchase complete, You can look in your personal purchases to see it. Thank you for buying at Flint\n" +
+    res.send(200).json("Purchase complete, You can look in your personal purchases to see it. Thank you for buying at Flint\n" +
         "the place to ignite your camping adventure");
 });
 /** This function handles the search user by name feature in admin
@@ -819,7 +827,7 @@ app.post('/search/searchproduct', async (req, res, next) => {
         }
         return;
     }
-    res.status(200).json(productsFind);
+    res.send(200).json(productsFind);
 });
 /** This function handles the search user by name feature in admin
  */
@@ -1334,9 +1342,9 @@ function quancheck(cart) {
     });
 }
 
-/** This function handles the cart in checkout operarion
+/** This function handles the cart in checkout operation
  *  this is a validation function to the price calculated in the front end
- * @param cart
+ * @param cart - the cart that the user want to purchase
  * @return {Promise<unknown>}
  */
 // cart item {product: Product(object) ,quantity: strictly positive number }
