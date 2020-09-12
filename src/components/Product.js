@@ -30,9 +30,11 @@ function Product(props) {
 
         <Space direction="vertical">
             <Card type="text" id="name" title={product.name} style={{width: 300}}>
-                <img src={product.image} width={100}/>
+                <div style={{height: '150px'}}>
+                    <img src={product.image} width={100}/>
+                </div>
 
-                <p type="text" id="desc">Description: {product.description}</p>
+                <p type="text" id="desc" style={{height: '70px'}}>Description: {product.description}</p>
                 <p type="text" id="price">Price: {product.price}$</p>
                 <p type="text" id="desc">Rate:<Rate disabled defaultValue={product.rating}/></p>
                 {/*<button type="submit" formAction="./ShoppingCart">Add To Cart</button>*/}
