@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import logo from '../logo.svg';
 import '../App.css';
 import 'antd/dist/antd.css';
@@ -12,15 +12,31 @@ function Category({name}) {
     const [products, setProducts] = useState([]);
 
     const getCategoryProducts = () => {
-        fetch("http://localhost:3001/category/" + name).then(res => setProducts(res.data))
+        fetch("http://localhost:3001/categories/" + name)
+            .then(res => res.json())
+            .then(data => setProducts(data))
     }
+//.map(products=>products.name).sort()
+    useEffect(getCategoryProducts, [name]);
+
     return (
-        products.map((product, id) => <Product name={product.name} rate={product.rate}/>)
+        <section className="category">
+            {products.map(product => <Product key={product.id}
+                                              id={product.id}
+                                              name={product.name}
+                                              rating={product.rating}
+                                              price={product.price}
+                                              image={product.image}
+                                              description={product.description}
+            />)}
+        </section>
     )
+//         <section className="results">
+//         {results.map(result =>(
+//                 <Result key={result.ImdbID} result={result} openPopup={openPopup}/>
+//
+//             ))}
+// </section>
 
 }
-// <Dropdown overlay={Menu}>
-//     <Button>
-//         Button ,M,.M,.SA <DownOutlined />
-//     </Button>
-// </Dropdown>
+export default Category;

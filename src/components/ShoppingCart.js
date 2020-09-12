@@ -1,13 +1,33 @@
 import React, {useState} from 'react';
-import ReactDOM from 'react-dom';
-import { render } from '@testing-library/react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import 'antd/dist/antd.css';
+import {Layout, Breadcrumb, Row, Col, Table, Space, Divider, Statistic, Button, Form,} from 'antd';
+import { CreditCardOutlined, DeleteOutlined,ShoppingOutlined } from '@ant-design/icons';
+import Title from "antd/lib/typography/Title";
+import {BrowserRouter as Router, Link} from "react-router-dom";
+import CartRow from "./CartRow";
+const { Content } = Layout;
 
-import { Table, Tag, Space ,InputNumber} from 'antd';
 
 
-function ShoppingCart() {
+    const ShopppingCart = (props) => {
+        const [cart, setCart]= useState(null);
+
+        const onClear = () => {
+            fetch("http://localhost:3001/cart/emptycart",
+                {
+                    method: 'POST', // or 'PUT'
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        };
     const columns = [
         {
             title: 'Product',
@@ -24,67 +44,86 @@ function ShoppingCart() {
             title: 'Price',
             dataIndex: 'price',
             key: 'price',
+        },{
+            title: 'Amount',
+            dataIndex: 'amount',
+            key: 'amount',
+        },{
+            title: 'Total Price',
+            dataIndex: 'total',
+            key: 'total',
         },
-        // {
-        //     title: 'Tags',
-        //     key: 'tags',
-        //     dataIndex: 'tags',
-        //     render: tags => (
-        //         <>
-        //             {tags.map(tag => {
-        //                 let color = tag.length > 5 ? 'geekblue' : 'green';
-        //                 if (tag === 'loser') {
-        //                     color = 'volcano';
-        //                 }
-        //                 return (
-        //                     <Tag color={color} key={tag}>
-        //                         {tag.toUpperCase()}
-        //                     </Tag>
-        //                 );
-        //             })}
-        //         </>
-        //     ),
-        // },
-//     {
-//         title: 'Action',
-//         key: 'action',
-//         render: (text, record) => (
-//             <Space size="middle">
-//                 <a>Invite {record.name}</a>
-//                 <a>Delete</a>
-//             </Space>
-//         ),
-//     },
     ];
 
-    const data = [
-        {
-            product: 'Tent',
-            description: 'mklnlknlnlknlknlnkln',
-            price: '50 dollar',
+    // const total = [0];
+    // props.cart.forEach((elem) => total.push(+elem.itemPrice.replace('$', '')));
 
-        }
-        // {
-        //     key: '1',
-        //     name: 'John Brown',
-        //     age: 32,
-        //     address: 'New York No. 1 Lake Park',
-        //     tags: ['nice', 'developer'],
-        // },
-        // {
-        //     key: '2',
-        //     name: 'Jim Green',
-        //     age: 42,
-        //     address: 'London No. 1 Lake Park',
-        //     tags: ['loser'],
-        // },
-        // {
-        //     key: '3',
-        //     name: 'Joe Black',
-        //     age: 32,
-        //     address: 'Sidney No. 1 Lake Park',
-        //     tags: ['cool', 'teacher'],
-        // },
-    ];
+    return (
+        <Router>
+        <div>
+            <section className="category">
+                {cart.map(row => <CartRow key={row.product.id}
+                                               id={row.product.id}
+                                               image={row.product.image}
+                                               name={row.product.name}
+                                               price={row.product.price}
+                                               description={row.product.description}
+                                               quantity={row.quantity}
+                                               total = {Number(row.quantity)*Number(row.product.price)}
+                />)}
+
+            </section>
+            <Layout>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <Content className='site-layout-background'>
+                    <header> <Title style={{color: 'BLACK',  position: 'fixed',
+                        marginLeft: '450px',
+                        marginRight: '300px',
+                    marginTop: '20px'}}level={2}>Shopping Cart</Title>
+                    </header>
+                    <br></br>
+                    <Row justify='end'>
+                        <Col>
+                            <Button type='default' onClick={onClear} danger>
+                                <DeleteOutlined />
+                                &nbsp;
+                                <span>Delete Cart</span>
+                            </Button>
+                        </Col>
+                    </Row>
+                    {/*<h2>*/}
+                    {/*    Total Items <strong>({props.cart.length})</strong>*/}
+                    {/*</h2>*/}
+                    <br></br>
+                    <Table columns={columns} dataSource={props.cart} pagination={false} />
+                    <Row justify='start'>
+
+                    </Row>
+                    <br></br>
+                    <Row justify='end'>
+                        <Col>
+                            {/*<Statistic*/}
+                            {/*    title='Total (tax incl).'*/}
+                            {/*    value={`$ ${Math.round(*/}
+                            {/*        total.reduce((total, num) => total + num)*/}
+                            {/*    ).toFixed(2)}`}*/}
+                            {/*    precision={2}*/}
+                            {/*/>*/}
+                            <Button style={{ marginTop: 16,  marginLeft: '500px',
+                                marginRight: '600px'}} type='primary' onClick={() => window.location.href= "/CheckOut"}>
+                             Check out <ShoppingOutlined />
+                            </Button>
+                        </Col>
+                    </Row>
+                </Content>
+            </Layout>
+        </div>
+        </Router>
+    );
 };
-export default ShoppingCart;
+
+
+export default ShopppingCart;

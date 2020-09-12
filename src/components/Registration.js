@@ -6,17 +6,32 @@ import Title from "antd/lib/typography/Title";
 
 
 const Registration = (props) => {
-    const [form] = Form.useForm()
+    const [form] = Form.useForm();
 
 
-    const onFieldsChanged = values => {
+    const onFieldsChanged = () => {
+        fetch('http://localhost:3001/register', {
+            method: 'POST', // or 'PUT'
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value,
+                remail: document.getElementById("remail").value,
+                rpassword: document.getElementById("rpassword").value,
+                name: document.getElementById("name").value
+            }),
+        })
+            .then(response => response.json()).catch((error) => {
+            console.error('Error:', error);
+        });
+    };
 
-        console.log("values:")
-        console.log(values)
-    }
 
 
     return (
+
         <Router>
         <div className="log">
             <header> <Title style={{color: 'BLACK'}} level={2}>Create your Flint account</Title>

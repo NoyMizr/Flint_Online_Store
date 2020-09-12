@@ -49,8 +49,13 @@ position: absolute;
   margin-top: 70px;
   margin-left: 300px;
   margin-right: 300px;
+   ;
 }
 
 .site-button-ghost-wrapper {
   padding:0px 0px 0px;
+}
+
+.category {
+  margin-top: 15vh;
 }

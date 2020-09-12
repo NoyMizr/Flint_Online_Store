@@ -6,16 +6,23 @@ import App from './App';
 import Login from './components/Login';
 import Category from './components/Category';
 import Registration from "./components/Registration";
-
+import RatingPage from "./components/RatingPage"
 import * as serviceWorker from './serviceWorker';
 import Product from "./components/Product";
 import ShoppingCart from "./components/ShoppingCart";
+import CheckOut from "./components/CheckOut";
+import Admin from "./components/Admin";
+import CartRow from "./components/CartRow"
+import AdminRow from "./components/AdminRow"
+import {CookiesProvider} from "react-cookie";
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-      {/*{products.map((id, product) => <Product name={product.name} rate={product.rate}/>)}*/}
-  </React.StrictMode>,
+    <CookiesProvider>
+        <React.StrictMode>
+            <App/>
+            {/*{products.map((id, product) => <Product name={product.name} rate={product.rate}/>)}*/}
+        </React.StrictMode>
+    </CookiesProvider>,
   document.getElementById('root')
 );
 
