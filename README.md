@@ -1,9 +1,9 @@
 
 #Flint
 
-Web application - online camping store, Flint
+Web application - online camping store, Flint <br />
 built with JavaScript, Html and css using React
-
+<br />
 
 <img width="1274" alt="Screen Shot 2021-06-04 at 2 17 26 PM" src="https://user-images.githubusercontent.com/70144108/120794770-53898680-c541-11eb-96b4-6ba227a1a6c0.png">
 
