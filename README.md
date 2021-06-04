@@ -1,7 +1,7 @@
 
 <b>Flint- Online store</b><br />
 
-Web application - online camping store, Flint <br />
+Web application - online camping store <br />
 built with JavaScript, Html and css using React
 <br />
 <br />
