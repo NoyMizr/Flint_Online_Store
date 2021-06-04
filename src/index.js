@@ -12,8 +12,6 @@ import Product from "./components/Product";
 import ShoppingCart from "./components/ShoppingCart";
 import CheckOut from "./components/CheckOut";
 import Admin from "./components/Admin";
-import CartRow from "./components/CartRow"
-import AdminRow from "./components/AdminRow"
 import {CookiesProvider} from "react-cookie";
 
 ReactDOM.render(

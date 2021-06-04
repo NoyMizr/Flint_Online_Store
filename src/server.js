@@ -14,23 +14,15 @@ const bodyParse = require("body-parser");
 const session = require("express-session");
 const connectRedis = require("connect-redis");
 const fetch = require("node-fetch");
-
-// const bcrypt = require("bcrypt");
-// const cryptoJs = require("crypto-js");
 const redisStore = connectRedis(session);
 
-// create server and connectivity to redis db
+//useful constants
 const port = process.env.PORT || 3001;
 const redisClient = redis.createClient({host: "127.0.0.1", port: 6379});
 const app = express();
-//const router = express.Router();
-// const imagesPath = path.join(__dirname, '/images');
 const imagesPath = '/images';
 
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
-}));
+// let app express use modules
 app.use(bodyParse.json());
 app.use(bodyParse.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -45,10 +37,18 @@ app.use(session({
         maxAge: 1000 * 60 * 30, // session max age in miliseconds
     }
 }));
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
+
+// connect to redis
 redisClient.on("connect", function () {
     console.log("You are now connected");
 });
 
+// Error Handler Class
 class ErrorHandler extends Error {
     constructor(statusCode, message) {
         super();
@@ -59,6 +59,7 @@ class ErrorHandler extends Error {
 
 const handleError = (err, res) => {
     const {statusCode, message} = err;
+    res.setHeader('Content-Type', 'application/json');
     res.status(statusCode).json({
         status: "error",
         statusCode,
@@ -66,49 +67,26 @@ const handleError = (err, res) => {
     });
 };
 
-app.use((err, req, res, next) => {
-    handleError(err, res);
-});
-/** This Function is a Helper debugging function that print all users
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
- */
-app.get('/products', (req, res) => {
-    const types = getAllTypeAsObj('products', (results) => {
-        console.log(results);
-    });
-});
-
-
-/** This Function is a Helper debugging function that print all users
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
- */
-app.get('/users', (req, res) => {
-    const types = getAllTypeAsObj('users', (results) => {
-        console.log(results);
-    });
-
-});
-
 /** This async function is creating a user and inserting to db
  *  due to redis accessibility is a-Sync that means the entire func' must be a-sync
- *  Base_Status: 100% complete.
- *  Status: 90% complete.
- *  Problem right now
- *  1. Doesn't send the error to user.. (sends to console instead)
- *  2. Cookies for the next() functions
- *  3. Problem in Empty DB
- *  4. Encryprion
  */
 app.post('/register', async (req, res, next) => {
-        // error handling one of the values is undefined..
+        // error handling one of the values is defined..
         if (req.session.key) {
             res.status(401).json("already logged in");
+            try {
+                throw new ErrorHandler(401, "Already Logged In");
+            } catch (err) {
+                next(err);
+            }
             return;
         }
         if (req.body.email.valueOf() === undefined || req.body.password.valueOf() === undefined || req.body.name.valueOf() === undefined) {
-            res.status(400).json("Missing Data in the request");
+            try {
+                throw new ErrorHandler(400, "Missing Data in the request");
+            } catch (err) {
+                next(err);
+            }
             return;
         }
         // generate new id depending on the type of object in order in insert to first hash key
@@ -117,16 +95,29 @@ app.post('/register', async (req, res, next) => {
         let emailVal = await checkValitdyEmail(req.body.email, req.body.remail);
         //error handling
         if (emailVal !== true) {
+            // email not the same
             if (emailVal === "Not the same") {
-                res.status(401).json("Not the same email");
+                try {
+                    throw new ErrorHandler(401, "Not the same email");
+                } catch (err) {
+                    next(err);
+                }
                 return;
             }
             // email is taken
             if (emailVal === "Taken") {
-                res.status(401).json("This Email is taken");
+                try {
+                    throw new ErrorHandler(401, "Please enter a different email");
+                } catch (err) {
+                    next(err);
+                }
                 return;
             }
-            res.status(500).json("Unexpected Error");
+            try {
+                throw new ErrorHandler(500, "Unexpected Error");
+            } catch (err) {
+                next(err);
+            }
             return;
         }
         //check validity of password if is not valid. go to next
@@ -134,66 +125,73 @@ app.post('/register', async (req, res, next) => {
         //error handling
         if (passVal !== true) {
             if (passVal === "illegal pass") {
-                res.status(403).json(`this password is illegal, you must include at least
+                try {
+                    throw new ErrorHandler(403, (`this password is illegal, you must include at least
     - 1 digit (0-9)
     - 1 capital letter (A-Z)
     - 1 small letters (a-z)
-    `);
+    - 6-12 characteres 
+    `));
+                } catch (err) {
+                    next(err);
+                }
                 return;
             }
             if (passVal === "not same pass") {
-                res.status(403).json("Not the same password");
-                return;
+                try {
+                    throw new ErrorHandler(403, "Not the same password");
+                } catch (err) {
+                    next(err);
+                }
             }
-            res.status(500).json("Unexpected Error");
+            try {
+                throw new ErrorHandler(500, "Unexpected error");
+            } catch (err) {
+                next(err);
+            }
             return;
         }
         // creating a user
         let user = {
             id: id,
-            password: req.body.password,// need encryption,
+            password: req.body.password,
             name: req.body.name,
             email: req.body.email,
             logins: [], // contains date,hours in UTC, Local time
-            purchases: [], //contains , purchase object that includes, items , prices, colors?, date, and after purchase clear cart
-            cart: [],         // should be in cookies?
+            purchases: [], //contains , purchase object that includes, cart purchases , date, and user info for delivery , after purchase clear cart
+            cart: [],         // will be set in the session  at login
             sessions: [],   // list of all sessions
-            cursession: false,
             permission_level: 2,// regular users
-            //  falseEntry:0,
-            // recq
-            // reca
         };
         // set the user into db , hashed
         redisClient.hset('users', id, JSON.stringify(user), (err, results) => {
             if (err) console.log(err);
         });
-        console.log("registration complete");
-//        res.status(200).json("User registered Successfully");
         res.status(200).json(user);
     }
 );
 
 /**This function is for logging in the user and sets values in his session
- *  Base_Status: 100% complete.
- *  Status: 90% complete.
- *  Problems:
- * 1. password need to be hashed,Encryprion/Decryption
- * 2. cookies (for errors , dos attacks, and multiple enteries) in front
- * 3. personalized page (showing cart)-> redirection
  */
 app.post('/login', async (req, res, next) => {
     // getting the parameter from the request
     if (req.session.key) {
-        //throw new ErrorHandler(401, 'already logged in')
-        res.status(401).send({error: "already logged in"});
+        try {
+            throw new ErrorHandler(401, 'Already logged in');
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let email = req.body.email;
     let pass = req.body.password;
     // Case handling the email or password is not given in HTTP req
     if (email.valueOf() === undefined || pass.valueOf() === undefined) {
-        res.status(400).send("Missing Data");
+        try {
+            throw new ErrorHandler(400, "Missing Data");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     // checking if there is a user with this email and the password matches
@@ -201,18 +199,27 @@ app.post('/login', async (req, res, next) => {
     // error handling
     if (ans !== true) {
         if (ans === "not registered") {
-            res.status(401).send("Please Register or enter another mail");
+            try {
+                throw new ErrorHandler(401, "Please Register or enter another mail");
+            } catch (err) {
+                next(err);
+            }
             return;
         }
+
         if (ans === "Password Is Incorrect") {
-            res.status(403).send("Wrong Password");
+            try {
+                throw new ErrorHandler(403, "Wrong password");
+            } catch (err) {
+                next(err);
+            }
             return;
         }
-        if (ans === "Missing Data") {
-            res.status(400).json("Missing Data in the request");
-            return;
+        try {
+            throw new ErrorHandler(500, "Unexpected error");
+        } catch (err) {
+            next(err);
         }
-        res.status(500).json("Unexpected Error");
         return;
     }
 
@@ -224,33 +231,56 @@ app.post('/login', async (req, res, next) => {
     let newLogins = await pushItemToObject(user, "logins", date);
     // We Update the DB accordingly
     await updateObjectIndb("users", user, "logins", newLogins);
-    //   req.session.client_id = user[0].id;
     req.session.key = user.id;
     req.session.cart = user.cart;
+    if (req.body.rememberme === true) {
+        req.session.cookie.maxAge = 2147483647;
+    }
     let newSessions = await pushItemToObject(user, "sessions", req.session.id);
     await updateObjectIndb("users", user, "sessions", newSessions);
     res.status(200).json(user);
     console.log("Log In Successfully");
-})
-;
+});
+
+/**
+ * Get the user's info while using if he has an active session
+ */
+app.get('/connected-user', async (req, res, next) => {
+    if (!req.session.key) {
+        try {
+            throw new ErrorHandler(401, 'Not Logged In');
+        } catch (err) {
+            next(err);
+        }
+        //res.status(401).send({user: ''});
+        return;
+    }
+    const user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
+    res.status(200).send(user);
+});
 
 
 /** This Function is logout function, and destroys the session
- *  Base_Status: 100% complete.
- *  Status: 90% complete.
  */
-app.post('/logout', function (req, res) {
+app.post('/logout', function (req, res, next) {
     if (!req.session.key) {
-        res.status(401).json("Cant log out if not logged in");
-        return;
-    }
-    req.session.destroy(function (err) {
-        if (err) {
-            console.log(err);
-        } else {
-            res.redirect("localhost:3001/");//
+        try {
+            throw new ErrorHandler(401, 'Already Logged Out');
+        } catch (err) {
+            next(err);
         }
-    });
+        return;
+    } else {
+        req.session.destroy(function (err) {
+            if (err) {
+                console.log(err);
+            } //else {
+            // res.clearCookie('connect.sid',{path:'/'});
+            // //res.status(200).send({message:"Logged out Succesfully"});
+            //}
+        });
+        res.clearCookie('connect.sid',{path:'/'}).status(200).send({message:"Logged Out Successfully"});
+    }
 });
 
 
@@ -261,64 +291,76 @@ app.get('/', (req, res) => {
     res.send("Hello");
 });
 
-/**Temp method for main page
- * maybe change to redirection to the main store?
- */
-app.get('/login', (req, res) => {
-    res.send("Hello login");
-});
-
 /** This function is admin only function , and returns all the non admin users data exluding the password from db
- *  Base_Status: 90% complete.
- *  Status: 90% complete.
  */
-//TODO test
-app.post('/admin/users', async (req, res) => {
-    console.log("Test");
+app.post('/admin/users', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
+        return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
     if (user.permission_level >= 2) {
-        res.status(401).json("Not Admin");
+        try {
+            throw new ErrorHandler(401, "Not an Admin");
+        } catch (err) {
+            next(err);
+        }
+        return;
     }
     let users = (await whereSQLmain("users", "permission_level", 2)).valueOf();
     let usersSend = users.map((user) => {
         delete (user.password);
         return user;
     });
-    console.log(usersSend);
     res.status(200).send(usersSend);
 });
 
 /** This function is admin only function , and adding a product to database
- *  Base_Status: 90% complete.
- *  Status: 90% complete.
- *  Problems :
- *
  */
-// TODO test
-app.post('/admin/addproduct', async (req, res) => {
+app.post('/admin/addproduct', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Need to login first");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
     if (user.permission_level >= 2) {
-        res.status(401).json("Not Authorized");
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let id = generateNewIDforObject("product");
+
     let path1 = `${imagesPath}/${req.body.image}`;
     if (!path1) {
-        //error
-        res.status(500).send("Image not in folder");
+        //error image not found
+        try {
+            throw new ErrorHandler(500, "Picture not in found");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
-    if (Number(req.body.price) !== req.body.price && Number(req.body.price) <= 0) {
+    // soft since ints will be string
+    if (Number(req.body.price) != req.body.price && Number(req.body.price) <= 0) {
         //error
-        res.status(500).send("Price is invalid");
+        try {
+            throw new ErrorHandler(500, "Invalid price");
+        } catch (err) {
+            next(err);
+        }
         return;
+
     }
     let product = {
         id: id,
@@ -337,91 +379,129 @@ app.post('/admin/addproduct', async (req, res) => {
         if (err) console.log(err);
     });
 });
-/** This function is admin only function , and given a user in front page, it gives his purchases history
- *  Base_Status: 90% complete.
- *  Status: 90% complete.
- *  Problems :
- *
- */
-// TODO test
-app.post('/admin/purchases', async (req, res) => {
-    if (!req.session.key) {
-        res.status(401).json("Need to login first");
-        return;
-    }
-    let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
-    if (user.permission_level >= 2) {
-        res.status(401).json("Not Authorized");
-        return;
-    }
-    let wanteduser = (await whereSQLmain("users", "id", req.body.user)).valueOf()[0];
-    if (!wanteduser) {
-        res.status(500).json("Not a user");
-        return;
-    }
-    res.status(200).json(wanteduser.purchases);
-});
 
-/** This function is admin only function , and its edit a product that exists in the database by giving it's id
- *  Base_Status: 90% complete.
- *  Status: 90% complete.
- *  Problems :
- *
+/** This function is admin only function , and its edit a product that exists in the database by giving it's product's id
  */
-// TODO test
-app.post('/admin/editproduct', async (req, res) => {
+app.post('/admin/editproduct', async (req, res,next) => {
     if (!req.session.key) {
-        res.status(401).json("Need to login first");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
     if (user.permission_level >= 2) {
-        res.status(401).json("Not Authorized");
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
         return;
+
     }
-    let product = (await whereSQLmain("products", "id", req.body.product)).valueOf()[0];
+    let product = (await whereSQLmain("products", "id", req.body.productID)).valueOf()[0];
     if (!product) {
-        res.status(401).json("Not in the database");
+        try {
+            throw new ErrorHandler(500, "Product not found");
+        } catch (err) {
+            next(err);
+        }
+        return;
+
     }
     let field = req.body.field;
     if (field === "id") {
-        res.status(500).send("Error");
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
         return;
+
     }
     let newValue = req.body.newValue;
     if (field === "price") {
         if (Number(newValue) !== newValue && Number(newValue) <= 0) {
             //error
-            res.status(500).send("Price is invalid");
+            try {
+                throw new ErrorHandler(500, "Price is invalid");
+            } catch (err) {
+                next(err);
+            }
             return;
         }
-    }
-    if (field === "image") {
-        newValue = `${imagesPath}/${req.body.image}`;
+    } else if (field === "image") {
+        newValue = `${imagesPath}/${newValue}`;
         if (!newValue) {
             //error
-            res.status(500).send("Image not in folder");
+            try {
+                throw new ErrorHandler(500, "Image not in found");
+            } catch (err) {
+                next(err);
+            }
+            return;
+        }
+    }else {
+        if (field !== "description" || (field !== "color" || (field.length !== 6 && field.toLowerCase().match("(^\d||[a-f])+")))) {
+            res.status(500).send("Error with category name");
             return;
         }
     }
 
     await updateObjectIndb("products", product, field, newValue);
 });
-/** This function is admin only function , and adding a product to database
- *  Base_Status: 90% complete.
- *  Status: 90% complete.
- *  Problems :
- *
+/** This function is admin only function , and given a user in front page, it gives his purchases history
  */
-// TODO test
-app.post('/admin/sessions', async (req, res) => {
+app.post('/admin/purchases', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Need to login first");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
     if (user.permission_level >= 2) {
-        res.status(401).json("Not Authorized");
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
+        return;
+    }
+    let wanteduser = (await whereSQLmain("users", "id", req.body.user)).valueOf()[0];
+    if (!wanteduser) {
+        try {
+            throw new ErrorHandler(500, "User not found");
+        } catch (err) {
+            next(err);
+        }
+        return;
+    }
+    res.status(200).json(wanteduser.purchases);
+});
+
+/** This function is admin only function , and adding a product to database
+ */
+app.post('/admin/sessions', async (req, res, next) => {
+    if (!req.session.key) {
+        try {
+            throw new ErrorHandler(401, "Need to login first");
+        } catch (err) {
+            next(err);
+        }
+        return;
+    }
+    let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
+    if (user.permission_level >= 2) {
+        try {
+            throw new ErrorHandler(401, "Not an Admin");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let wanteduser = (await whereSQLmain("users", "id", req.body.user)).valueOf()[0];
@@ -434,43 +514,66 @@ app.post('/admin/sessions', async (req, res) => {
 
 
 /** This function allows you to get a product
- *
+ *  for product page
  */
-app.post('/products/:product', async (req, res) => {
+app.post('/products/:product', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let prodID = req.params.product;
     let product = (await whereSQLmain("products", "id", prodID)).valueOf()[0];
-    if(!product){
-        res.status(500).json("Error");
+    if (!product) {
+        try {
+            throw new ErrorHandler(500, "Product not found");
+        } catch (err) {
+            next(err);
+        }
+        return;
     }
     res.status(200).send(product);
 });
 
 /** This function allows to add a product from the store to the cart
  *  @param product = (req.params.product), is the product id given
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-//let id = req.session.key; // create var name
-app.post('/products/:product/addtocart', async (req, res) => {
-    if (!req.session.key) {
-        res.status(401).json("Please Login");
+app.post('/products/:product/addtocart', async (req, res, next) => {
+    if (!req.session.id) {
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
     let prodID = req.params.product;
     let product = (await whereSQLmain("products", "id", prodID)).valueOf()[0];
     if (!product) {
-        res.status(401).send("error");
+        if (!product) {
+            try {
+                throw new ErrorHandler(500, "Product not found");
+            } catch (err) {
+                next(err);
+            }
+            return;
+        }
+    }
+    let cart = user.cart;
+    let index = await findProductInCart(cart, product.id);
+    if (index < -1) {
+        try {
+            throw new ErrorHandler(500, "Unexpected error has occurred");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
-    let cart = req.session.cart;
-    let index = await findProductInCart(cart, product.id);
     let result;
-    let message;
     let newCart;
     if (index !== -1) {
         // exist in cart
@@ -478,13 +581,13 @@ app.post('/products/:product/addtocart', async (req, res) => {
         result.quantity += 1;
         cart[index] = result;
         newCart = cart;
-        message = "The Item's quantity increases by 1";
     } else {
         //let quantity = 1||req.params.quantity; /:quantity
         result = {product: product, quantity: 1};//quantity:quantity
-        message = "Item was successfully added to cart";
+        //add to cart
         newCart = await pushItemToObject(user, "cart", result);
     }
+    // update cart
     await updateObjectIndb("users", user, "cart", newCart);
     req.session.cart = newCart;
     //res.status(200).send(message);
@@ -492,13 +595,14 @@ app.post('/products/:product/addtocart', async (req, res) => {
 });
 /** This function allows to raise the quantity of a product that already is the cart by 1
  *  @param product = (req.params.product), is the product id given
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
 app.post('/cart/:product/addone', async (req, res, next) => {
-    //add items to cart..
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
@@ -506,57 +610,71 @@ app.post('/cart/:product/addone', async (req, res, next) => {
     let index = await findProductInCart(cart, req.params.product);
     if (index === -1) {
         //ERROR CONTROL
-        res.status(400).json("Unauthorized");
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let result = cart[index];
     result.quantity += 1;
     cart[index] = result;
     let newCart = cart;
-    let message = "Item's quantity is does increase by 1";
-    //let newCart = await pushItemToObject(user, "cart", result);
     await updateObjectIndb("users", user, "cart", newCart);
     req.session.cart = newCart;
     res.status(200).send(newCart);
-    //res.status(200).send(message);
 });
 
 /** This function allows to decrease the quantity of a product that already is the cart by 1
  *  @param product = (req.params.product), is the product id given
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-app.post('/cart/:product/removeone', async (req, res) => {
-    // remove 1 items from cart..
-    // if quantity == 1 => removeall
-    // TOLEARN : redirect + cookies
+app.post('/cart/:product/removeone', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
+    if (!user) {
+        try {
+            throw new ErrorHandler(500, "User not found");
+        } catch (err) {
+            next(err);
+        }
+        return;
+    }
     let cart = req.session.cart.valueOf();
     let product = (await whereSQLmain("products", "id", req.params.product)).valueOf()[0];
     let index = await findProductInCart(cart, req.params.product);
     if (index === -1) {
         //Quan = 0 , item not in cart
-        res.status(500).json("Not in cart");
+        try {
+            throw new ErrorHandler(403, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
-    let message;
     let result;
     if (cart[index].quantity <= 0) {
         // unexpected error
-        res.status(500).json("Unexpected Error");
+        try {
+            throw new ErrorHandler(500, "Unexpected Error");
+        } catch (err) {
+            next(err)
+        }
         return;
     }
     if (cart[index].quantity === 1) {
+        // if quantity == 1 => removeall
         result = await removeItemFromCart(cart, req.params.product);
-        message = `Since only one ${product.name} was in cart it was removed`;
     } else {
-        // remove 1
+        // remove 1 items from cart..
         result = await updateQuantityInCart(cart, index, -1);
-        message = "Item's quantity is does decreased by 1";
     }
     await updateObjectIndb("users", user, "cart", result);
     req.session.cart = result;
@@ -565,12 +683,14 @@ app.post('/cart/:product/removeone', async (req, res) => {
 });
 /** This function allows to drop a cart item that already is the cart from the cart
  *  @param product = (req.params.product), is the product id given
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-app.post('/cart/:product/removeallProduct', async (req, res) => {
+app.post('/cart/:product/removeallProduct', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
@@ -578,23 +698,28 @@ app.post('/cart/:product/removeallProduct', async (req, res) => {
     let index = await findProductInCart(cart, req.params.product);
     if (index === -1) {
         //Quan = 0 , item not in cart
-        res.status(500).json("Not in cart");
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let newCart = await removeItemFromCart(cart, req.params.product);
     await updateObjectIndb("users", user, "cart", newCart);
     req.session.cart = newCart;
     res.status(200).json(req.session.cart)
-    // res.status(200).send("Item Was Successfully removed");
 });
 /** This function allows to delete all the products in the cart
  *  @param product = (req.params.product), is the product id given
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-app.post('/cart/emptycart', async (req, res) => {
+app.post('/cart/emptycart', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please Login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
@@ -602,19 +727,21 @@ app.post('/cart/emptycart', async (req, res) => {
     await updateObjectIndb("users", user, "cart", []);
     res.status(200).send("Cart was successfully emptied");
 });
+
 /** This function peforms a "checkout"
  *  the process includes
  *  A) Check validity from front
  *  B) Add new Purchase to user purchases
  *  C) Clean the cart
  *  @param price = (req.params.price), is the total price given by the
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-
-app.post('/checkout/:price', async (req, res) => {
+app.post('/checkout/:price', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
@@ -630,70 +757,97 @@ app.post('/checkout/:price', async (req, res) => {
     let result = await quancheck(cart);
     if (result === "NOPE") {
         // ERROR with quantities
-        res.status(500).json("Some went wrong with quantities");
+        try {
+            throw new ErrorHandler(500, "Unexpected Error with quantity");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let pricecheck = await priceCheck(cart);
     if (pricecheck === 0) {
         //error empty cart
-        res.status(400).json("Cannot checkout empty car");
+        try {
+            throw new ErrorHandler(400, "Can't checkout empty cart");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     if (pricecheck !== Number(req.params.price)) {
-        res.status(500).json("Error with Prices");
+        try {
+            throw new ErrorHandler(500, "Unexpected Error with prices");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
-    //ok
+    //purchase is valid
     let date = new Date().toUTCString();
-    let purchaseObj = {cart: cart, price: pricecheck, date: date, userInfo: userInfo};
+    let purchaseObj = {cart: cart,price: pricecheck, date: date, userInfo: userInfo};
     let newPurchases = await pushItemToObject(user, "purchases", purchaseObj);
     await updateObjectIndb("users", user, "purchases", newPurchases);
     await updateObjectIndb("users", user, "cart", []);
     req.session.cart = [];
-    // res.status(200).json(req.session.cart)
-    res.send(200).json("Purchase complete, You can look in your personal purchases to see it. Thank you for buying at Flint\n" +
+    res.status(200).json("Purchase complete, You can look in your personal purchases to see it. Thank you for buying at Flint\n" +
         "the place to ignite your camping adventure");
 });
 /** This function handles the search user by name feature in admin
- *  Base_Status: ?% complete.
- *  Status: ?% complete.
  */
-// TODO Test
-app.post('search/searchproduct', async (req, res) => {
+app.post('/search/product', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Need to login first");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
-    let productsFind = (await whereSQLmain("users", "name", req.body.query)).valueOf();
-    if(!productsFind){
-        res.status(401).json("Error");
+    let productsFind = (await whereSQLmain("products", "name", req.body.query)).valueOf();
+    if (!productsFind) {
+        try {
+            throw new ErrorHandler(500, "Product not found");
+        } catch (err) {
+            next(err);
+        }
+        return;
     }
-    res.send(200).json(productsFind);
+    res.status(200).json(productsFind);
 });
 /** This function handles the search user by name feature in admin
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-//TODO test
-app.post('admin/search/searchuser', async (req, res) => {
+app.post('admin/search/searchuser', async (req, res, next) => {
     if (!req.session.key) {
-        res.status(401).json("Need to login first");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
     if (user.permission_level >= 2) {
-        res.status(401).json("Not Authorized");
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let usersFind = (await whereSQLmain("users", "name", req.body.query)).valueOf();
-    res.send(200).json(usersFind);
+    res.status(200).json(usersFind);
 });
 /** This function filters the products shown via category
  *  @param category = (req.params.category), is the product id given
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-app.get('/categories/:category', async (req, res) => {
+app.get('/categories/:category', async (req, res, next) => {
+    if (!req.session.key) {
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
+    }
     // if category === "general" ->all
     let category = req.params.category;
     let afterFilter;
@@ -706,73 +860,106 @@ app.get('/categories/:category', async (req, res) => {
 });
 
 /** This function the user to show the purchases activities
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
  */
-// TODO test
-app.post('/purchases', async (req, res) => {
+app.post('/purchases', async (req, res, next) => {
     // maybe send to this user?
     if (!req.session.key) {
-        res.status(401).json("Please Login");
-        return;
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
     res.status(200).json(user.purchases);
 });
 /** This function allows the admin to show the purchases activities
- *  Base_Status: 90% complete.
- *  Status: 90% complete.
- *  1. how to look up a specific user
  */
-// TODO test
-app.post('admin/:user/purchases', async (req, res) => {
+app.post('/admin/:user/purchases', async (req, res, next) => {
     // maybe send to this user?
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
-    if (user.permission_level >= 2) {
-        res.status(403).json("Not Admin");
+    if (!user) {
+        try {
+            throw new ErrorHandler(500, "Unexpected error");
+        } catch (err) {
+            next(err);
+        }
+        return;
     }
-    // not admin => error
+    if (user.permission_level >= 2) {
+        try {
+            throw new ErrorHandler(401, "Unauthorized");
+        } catch (err) {
+            next(err)
+        }
+        return;
+    }
     let userWanted = (await whereSQLmain("users", "name", req.params.user)).valueOf()[0];
-    if(!userWanted){
-        res.status(500).json("User not found");
+    if (!userWanted) {
+        try {
+            throw new ErrorHandler(500, "Wanted user was not found");
+        } catch (err) {
+            next(err);
+        }
+        return;
     }
     res.status(200).json(userWanted.purchases);
 });
 
 
-/** updating the rating
+/** updating the rating of a product
  *
  * @param product - the product given a rating
  * @param rating - the new rating given by user
- *  Base_Status: 100% complete.
- *  Status: 100% complete.
- * problem : need to lock somehow the user from double voting, bought item in past, only if logged in ..
  */
-// TODO test
-app.post('products/:product/rating/:rating', async (req, res) => {
+app.post('/products/:product/rating/:rating', async (req, res, next) => {
     // if not logged in -> error
     if (!req.session.key) {
-        res.status(401).json("Please Login");
+        try {
+            throw new ErrorHandler(401, "Please login");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     // EXTRA if not purchased and past 14 days -> error please try and enjoy the product before give it a review
     let user = (await whereSQLmain("users", "id", req.session.key)).valueOf()[0];
+    if (!user) {
+        try {
+            throw new ErrorHandler(500, "Unexpected Error");
+        } catch (err) {
+            next(err);
+        }
+        return;
+    }
     let rating = Number(req.params.rating);
     let validRating = [1, 2, 3, 4, 5].filter(i => i === rating).length;
     if (validRating !== 1) {
         //error
-        res.status(500).json("Somthing went wrong");
+        try {
+            throw new ErrorHandler(500, "Unexpected Error");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let product = (await whereSQLmain("products", "id", req.params.product)).valueOf()[0];
     let map = (await product.usersVoted.map(obj => obj.id));
     let index = (await map.indexOf(user.id));
     if (index <= -2) {
-        res.status(500).json("Somthing went wrong");
+        try {
+            throw new ErrorHandler(500, "Unexpected Error");
+        } catch (err) {
+            next(err);
+        }
         return;
     }
     let newrating;
@@ -795,21 +982,19 @@ app.post('products/:product/rating/:rating', async (req, res) => {
         newsumratings = product.sumratings + alterRating;
         newrating = newsumratings / newNumVoted;
     }
+    // update to db
     await updateObjectIndb("products", product, "numvote", newNumVoted);
     await updateObjectIndb("products", product, "usersVoted", newUserVoted);
     await updateObjectIndb("products", product, "sumratings", newsumratings);
     await updateObjectIndb("products", product, "rating", newrating);
-
-
-
+    res.status(200).json({message: 'Updated Rate'})
 });
+
 /** this function generate new key for user and products
  *  if we run into an old key it regenerate
  *
  * @param type - user \ product
  * @return {string|null}
- *  Base_Status: 100% complete.
- *  Status: 95% complete
  */
 function generateNewIDforObject(type) {
     //promise
@@ -834,15 +1019,12 @@ function generateNewIDforObject(type) {
  * @param field = a respective field of the type
  * @param callback = a callback function used to do operation on the data
  * @return  {null|*[]} =a mapped array of all param wanted
- *  Base_Status: 100% complete.
- *  Status: 100% complete
  **/
 
 const getAllFieldsByType = (type, field, callback) => {
     return redisClient.hgetall(type, (err, results) => {
         if (err) console.log(err);
         else callback(getValuesByField(results, field));
-        //else console.log(getValuesByField(results, field));
     });
     // user_key + JSON(object) -> dictionary
 };
@@ -869,8 +1051,6 @@ const getValuesByField = (items, field) => {
  * @param field2 = a respective field of the type
  * @param callback = a callback function used to do operation on the data
  * @return  {string|*[]} =a mapped array of all params wanted
- *  Base_Status: 100% complete.
- *  Status: 100% complete
  **/
 
 const getAllFieldsByType1 = (type, field1, field2, callback) => {
@@ -892,8 +1072,6 @@ const getAllFieldsByType1 = (type, field1, field2, callback) => {
  * @param field1 - the wanted field
  * @param field2 - the second wanted field
  * @return {*[]} - the array wanted
- *  Base_Status: 100% complete.
- *  Status: 100% complete
  */
 const getValuesByField1 = (items, field1, field2) => {
     const allValues = Object.values(items).map(i => JSON.parse(i));// obj of obj key+value(both string) ->array of values(JSON) ->array of values(OBJ)
@@ -905,8 +1083,6 @@ const getValuesByField1 = (items, field1, field2) => {
  * @param type - user\product
  * @param callback - the callback function
  * @return {*} - the answer array
- *  Base_Status: 100% complete.
- *  Status: 100% complete
  */
 
 const getAllTypeAsObj = (type, callback) => {
@@ -922,8 +1098,6 @@ const getAllTypeAsObj = (type, callback) => {
  *
  * @param items- the result from last function
  * @return {any[]} - the array of objects
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 const getallType = (items) => {
     if (items === undefined || items === null) return items;
@@ -939,8 +1113,6 @@ const getallType = (items) => {
  * @param value - the value asked
  * @param callback - the callback function
  * @return {*} - an array of results
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 const whereSQL = (type, field, value, callback) => {
     // get all type from redis
@@ -956,8 +1128,6 @@ const whereSQL = (type, field, value, callback) => {
  * @param field - the field wanted
  * @param value - the values wanted
  * @return {any[]} - array of results
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 const whereSQL1 = (items, field, value) => {
     const values = Object.values(items).map(i => JSON.parse(i));// key+value -> values(JSON) -> values(OBJ)
@@ -971,10 +1141,11 @@ const whereSQL1 = (items, field, value) => {
  * @param field - the field wanted
  * @param value - the value searched
  * @return {Promise<unknown>} - the result wanted as Array
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 function whereSQLmain(type, field, value) {
+    if(field==="password"){
+        return null;
+    }
     return new Promise((resolve) => {
         whereSQL(type, field, value, (results) => {
             if (results === null) {
@@ -991,9 +1162,6 @@ function whereSQLmain(type, field, value) {
  * @param email - email form login
  * @param password - password entered
  * @return {string|boolean} - > String|false is error, true is OK
- * Base_Status: 100% complete.
- * Status: 90% complete
- * 1.timeout after 3 logins
  */
 
 async function checkEmailPassword(email, password) {
@@ -1006,10 +1174,6 @@ async function checkEmailPassword(email, password) {
                 resolve("not registered");
                 return;
             }
-            // console.log(results[index][1]);
-            // console.log(genhash(password));
-//validPass(results[index][1], password)
-
             if (results[index][1] === password) {
                 // the respected password is correct
                 resolve(true);
@@ -1026,8 +1190,6 @@ async function checkEmailPassword(email, password) {
  * @param email - email form HTTP
  * @param remail - remail from HTTP
  * @return {string|boolean} - string -> error, true-> OK
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 
 function checkValitdyEmail(email, remail) {
@@ -1053,8 +1215,6 @@ function checkValitdyEmail(email, remail) {
  * @param passA - the first password
  * @param passB - the second password
  * @return {string|boolean} - string -> error, true-> OK
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 function checkValidityPass(passA, passB) {
     // for the real change to 6
@@ -1074,8 +1234,6 @@ function checkValidityPass(passA, passB) {
  * @param field - the field wanted
  * @param value - the value to push
  * @return {Promise<unknown>} - the new value of the field.
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 function pushItemToObject(object, field, value) {
     return new Promise(resolve => {
@@ -1093,8 +1251,6 @@ function pushItemToObject(object, field, value) {
  * @param field - the field that we want to change
  * @param newValue - the value after change
  * @return {Promise<string>}- > just a message for debug purpose.
- * Base_Status: 100% complete.
- * Status: 100% complete
  */
 async function updateObjectIndb(type, object, field, newValue) {
     object[field] = newValue;
@@ -1214,7 +1370,6 @@ function isFirstInit() {
  * @param object - the product
  * @return {boolean}
  */
-//debug
 function addProductInit(object) {
     if (!firstInitAssign()) {
         return false;
@@ -1222,6 +1377,7 @@ function addProductInit(object) {
     let id = generateNewIDforObject("product");
     let path1 = `${imagesPath}/${object.image}`;
     if (!path1) {
+
         return;
     }
     if (Number(object.price) !== object.price && Number(object.price) <= 0) {
@@ -1432,9 +1588,9 @@ async function setBaseDB() {
     let adminId = "user_admin";
     let admin = {
         id: adminId,
-        email: "taldanai@icloud.com",
-        name: "Tal Danai",
-        password: "1234Ac",//p genhash("1234Ac")
+        email: "Admin@flint.com",
+        name: "Admin",
+        password: "Administrator",
         logins: [], // contains date,hours in UTC, Local time
         purchases: [], //contains , purchase object that includes, items , prices, colors?, date, and after purchase clear cart
         cart: [],         // should be in cookies?
@@ -1446,17 +1602,13 @@ async function setBaseDB() {
     });
 
 }
-
-// function genhash(text) {
-//     return bcrypt.hashSync(text, bcrypt.genSaltSync(9));
-// }
-//
-// function validPass(text, pass) {
-//     console.log(bcrypt.compareSync(text, pass));
-//     return bcrypt.compareSync(text, pass);
-// }
-
+// activating the set DB
 setBaseDB();
+
+// error handler
+app.use((err, req, res, next) => {
+    handleError(err, res);
+});
 
 // Server listening
 app.listen(port, () => {
