@@ -1,12 +1,17 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'antd/dist/antd.css';
-import {BrowserRouter as Router, Switch, Route, Link, Button, message, Tooltip } from 'react-router-dom';
-import {Layout, Menu, Input, Dropdown} from 'antd';
+import {BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import {Layout, Menu, Input, notification} from 'antd';
 import Title from 'antd/lib/typography/Title';
-import {useCookies} from "react-cookie";
-
-import {UserOutlined, LoginOutlined, UserAddOutlined, ShoppingCartOutlined, LogoutOutlined,ReadOutlined, DownOutlined} from '@ant-design/icons';
+import {
+    UserOutlined,
+    LoginOutlined,
+    UserAddOutlined,
+    ShoppingCartOutlined,
+    LogoutOutlined,
+    ReadOutlined,
+} from '@ant-design/icons';
 import Login from "./components/Login";
 import Registration from "./components/Registration";
 import ShoppingCart from "./components/ShoppingCart";
@@ -14,51 +19,54 @@ import Category from "./components/Category";
 import CheckOut from "./components/CheckOut";
 import RatingPage from "./components/RatingPage";
 import Admin from "./components/Admin";
-import CartRow from "./components/CartRow";
-import AdminRow from "./components/AdminRow";
+import Product from "./components/Product";
+import axios from 'axios';
+import EditProduct from "./components/EditProduct";
 
 const {Search} = Input;
 const {Header, Content, Sider} = Layout;
 
-const menu = (
-    <Menu>
-        <Menu.Item>
-            <a target="_blank" rel="noopener noreferrer" href="">
-                Product
-            </a>
-        </Menu.Item>
-        <Menu.Item>
-            <a target="_blank" rel="noopener noreferrer" href="">
-               Users
-            </a>
-        </Menu.Item>
-    </Menu>
-);
-const {SubMenu} = Menu;
-
-function App(name, id) {
+function App() {
     const [user, setUser] = useState(null);
-    const [cart, setCart] = useState(null);
-    const [cookies, setCookies] = useCookies(['connect.sid'])
+    const [products, setSearchedProducts] = useState([]);
+
     useEffect(() => {
-        console.log('cookies:')
-        console.log(cookies)
-    }, [user])
+        axios.get('http://localhost:3001/connected-user', {withCredentials: true})
+            .then(res => {
+                if (res) setUser(res.data)
+            })
+            .catch(err => notification.error({message: "Error: " + err}))
+    }, [])
+
+    const searchProducts = searchString => {
+        fetch('http://localhost:3001/search/product', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                query: searchString
+            })
+        })
+            .then(res => res.json())
+            .then(data => setSearchedProducts(data)).catch(err => notification.error("Error: " + err))
+    }
 
     const logout = () => {
         setUser(null);
-        // fetch('http://localhost:3001/logout', {
-        //     method: 'POST', // or 'PUT'
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        // })
-        //     .then(response => response.json()).catch((error) => {
-        //         console.error('Error:', error);
-        //     });
+        fetch('http://localhost:3001/logout', {
+            method: 'POST', // or 'PUT'
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .catch(error => notification.error({message: 'Error: ' + error}));
     };
-    return (
 
+    return (
         <Router>
             <div className="App">
                 <Layout>
@@ -72,79 +80,50 @@ function App(name, id) {
                         <div className="search1">
                             <Search
                                 placeholder="search"
-                                onSearch={value => console.log(value)}
+                                onSearch={searchProducts}
                                 style={{width: 300}}
                             />
                         </div>
 
-                        {/*{!user.permission_level === 1 ? <Dropdown overlay={menu}>*/}
-                        {/*    <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>*/}
-                        {/*        Select <DownOutlined/>*/}
-                        {/*    </a>*/}
-                        {/*</Dropdown> : <Dropdown overlay={menu}>*/}
-                        {/*    <b className="ant-dropdown-linkt" onClick={e => e.preventDefault()}>*/}
-                        {/*       <DownOutlined/>*/}
-                        {/*    </b>*/}
-                        {/*</Dropdown>*/}
-                        {/*}*/}
-
-
-
-                        {!user ? <Dropdown overlay={menu}>
-                            <b className="ant-dropdown-link4" onClick={e => e.preventDefault()}>
-                                <DownOutlined/>
-                            </b>
-                        </Dropdown>:!user.permission_level === 1 ? <Dropdown overlay={menu}>
-                            <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>
-                            <DownOutlined/>
-                            </a>
-                        </Dropdown> : <Dropdown overlay={menu} >
-                            <div style={{ marginLeft: '185px', color:'white'}}>
-                            <b className="ant-dropdown-linkt" onClick={e => e.preventDefault()} >
-                                Select <DownOutlined/>
-                            </b>
-                            </div>
-                        </Dropdown>
-                        }
-
-
                         <div>
-                            {!user ? <Menu theme="dark" mode="horizontal"><Menu.Item icon={<ReadOutlined />} key="1">
-                                <Link to="/login">ReadMe</Link>
-                            </Menu.Item>
-                                <Menu.Item icon={<LoginOutlined/>} key="2">
-                                <Link to="/login">Login</Link>
-                            </Menu.Item>
-                                <Menu.Item icon={<UserAddOutlined/>} key="3">
-                                    <Link to="/register">Registerion</Link>
-                                </Menu.Item></Menu> : !user.permission_level === 1 ?
-                                <Menu theme="dark" mode="horizontal">
-                                    <Menu.Item icon={<UserOutlined/>} key="0">Hello {user.name},
+                            {!user ? <Menu theme="dark" mode="horizontal"><Menu.Item icon={<ReadOutlined/>} key="1">
+                                    <Link to="/login">ReadMe</Link>
+                                </Menu.Item>
+                                    <Menu.Item icon={<LoginOutlined/>} key="2">
+                                        <Link to="/login">Login</Link>
                                     </Menu.Item>
-                                    <Menu.Item icon={<LogoutOutlined/>} key="1" onClick={logout}>
-                                        Logout
-                                    </Menu.Item>
-                                    <Menu.Item icon={<ShoppingCartOutlined/>} key="2">
-                                        <Link to="/ShoppingCart">cart</Link>
+                                    <Menu.Item icon={<UserAddOutlined/>} key="3">
+                                        <Link to="/register">Registerion</Link>
                                     </Menu.Item></Menu> :
-                                <Menu theme="dark" mode="horizontal">
-                                    <Menu.Item  key="0">Hello Admin {user.name},
-                                    </Menu.Item>
-                                    <Menu.Item icon={<UserOutlined/>} key="1">
-                                        <Link to="/Admin">Users</Link>
-                                    </Menu.Item>
-                                    <Menu.Item icon={<LogoutOutlined/>} key="2" onClick={logout}>
-                                        Logout
-                                    </Menu.Item>
-                                    <Menu.Item icon={<ShoppingCartOutlined/>} key="3">
-                                        <Link to="/ShoppingCart">cart</Link>
-                                    </Menu.Item></Menu>
+                                user.permission_level !== 1 ?
+                                    <Menu theme="dark" mode="horizontal">
+                                        <Menu.Item icon={<UserOutlined/>} key="0">Hello {user.name}
+                                        </Menu.Item>
+                                        <Menu.Item icon={<LogoutOutlined/>} key="1" onClick={logout}>
+                                            Logout
+                                        </Menu.Item>
+                                        <Menu.Item icon={<ShoppingCartOutlined/>} key="2">
+                                            <Link to="/ShoppingCart">cart</Link>
+                                        </Menu.Item>
+                                    </Menu> :
+                                    <Menu theme="dark" mode="horizontal">
+                                        <Menu.Item key="0">Hello Admin {user.name}
+                                        </Menu.Item>
+                                        <Menu.Item icon={<UserOutlined/>} key="1">
+                                            <Link to="/Admin">Users</Link>
+                                        </Menu.Item>
+                                        <Menu.Item icon={<LogoutOutlined/>} key="2" onClick={logout}>
+                                            Logout
+                                        </Menu.Item>
+                                        <Menu.Item icon={<ShoppingCartOutlined/>} key="3">
+                                            <Link to="/ShoppingCart">cart</Link>
+                                        </Menu.Item></Menu>
                             }
 
                         </div>
                     </Header>
                     <Layout>
-                        <Sider trigger={null}>
+                        {user && <Sider trigger={null}>
                             <div className="logo"/>
                             <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
                                 <Menu.Item key="0" icon={<UserOutlined/>}>
@@ -160,62 +139,75 @@ function App(name, id) {
                                     <Link to="/culinary">Culinary</Link>
                                 </Menu.Item>
                                 <Menu.Item key="4">
-                                    <Link to="/hiking gear">Hiking gear</Link>
+                                    <Link to="/hiking_gear">Hiking gear</Link>
                                 </Menu.Item>
                                 <Menu.Item key="5">
                                     <Link to="/storage">Storage</Link>
                                 </Menu.Item>
-                                <Menu.Item key="6">
-                                    <Link to="/general">General</Link>
-                                </Menu.Item>
-
-
+                                {/*<Menu.Item key="6">*/}
+                                {/*    <Link to="/all_products">All Products</Link>*/}
+                                {/*</Menu.Item>*/}
                             </Menu>
-                        </Sider>
+                        </Sider>}
+
 
                         <Content style={{minHeight: "100vh"}}>
                             <Switch>
-                                <Route exact path="/">
-                                    <div>
-                                        path=
-                                    </div>
-                                </Route>
                                 <Route path="/login">
                                     <Login setUser={setUser}/>
                                 </Route>
                                 <Route path="/register">
                                     <Registration user={'bla'}/>
                                 </Route>
+                            </Switch>
+                            {user && <Switch>
+                                <Route exact path="/">
+                                    <div className="content">
+                                        {products.length ? products.map(product =>
+                                            <Product key={product.id}
+                                                     user={user}
+                                                     id={product.id}
+                                                     setUser={setUser}
+                                                     name={product.name}
+                                                     price={product.price}
+                                                     image={product.image}
+                                                     rating={product.rating}
+                                                     description={product.description}
+                                            />) : ''}
+                                    </div>
+                                </Route>
                                 <Route exact path={'/camping_accessories'}>
-                                    <Category name={'camping_accessories'}/>
+                                    <Category name={'camping_accessories'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route exact path={'/clothing'}>
-                                    <Category name={'clothing'}/>
+                                    <Category name={'clothing'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route exact path={'/culinary'}>
-                                    <Category name={'culinary'}/>
+                                    <Category name={'culinary'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route path={'/hiking_gear'}>
-                                    <Category name={'hiking_gear'}/>
+                                    <Category name={'hiking_gear'} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route path={'/storage'}>
-                                    <Category name={'storage'}/>
+                                    <Category name={'storage'} user={user} setUser={setUser}/>
+                                </Route>
+                                <Route path={'/all_products'}>
+                                    <Category user={user} setUser={setUser}/>
                                 </Route>
                                 <Route path={"/ShoppingCart"}>
-                                    <ShoppingCart/>
+                                    <ShoppingCart cart={user.cart} user={user} setUser={setUser}/>
                                 </Route>
                                 <Route exact path={"/CheckOut"}>
-                                    <CheckOut/>
+                                    <CheckOut cart={user.cart}/>
                                 </Route>
-                                <Route path={'/RatingPage'}>
-                                    <RatingPage/>
+                                <Route path={"/edit/:productID"} component={EditProduct}>
                                 </Route>
+                                <Route path={'/RatingPage/:productName/:productID'} component={RatingPage}/>
                                 <Route path={'/Admin'}>
                                     <Admin/>
                                 </Route>
-                            </Switch>
+                            </Switch>}
                         </Content>
-
                     </Layout>
                 </Layout>
             </div>
